@@ -1,6 +1,6 @@
 # Deploy na Vercel
 
-Este projeto está preparado para rodar como Flask na Vercel usando `app.py` como entrada.
+Este projeto está preparado para rodar como Flask na Vercel usando `api/index.py` como entrada serverless, importando o app Flask definido em `app.py`.
 
 ## Variáveis obrigatórias
 

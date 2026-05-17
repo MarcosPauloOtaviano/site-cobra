@@ -15,3 +15,5 @@ venv/
 .vercel/
 
 .DS_Store
+
+.vercel

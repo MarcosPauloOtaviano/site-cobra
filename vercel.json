@@ -1,10 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "app.py": {
+    "api/**/*.py": {
       "excludeFiles": "{__pycache__/**,**/*.pyc,.env,.env.*,credenciais.json,*credenciais*.json,tests/**,__tests__/**,static/**,public/**}"
     }
   },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
+  ],
   "headers": [
     {
       "source": "/static/(.*)",
