@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Os Cobra da Bola | Vitrine Premium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}" />
+</head>
+<body class="lookbook-page">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="flash-stack" aria-live="polite">
+        {% for cat, msg in msgs %}
+          <div class="flash-message flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="toast-stack" id="toastWrap" aria-live="polite"></div>
+
+  <button type="button" class="cart-overlay" id="cartOverlay" aria-label="Fechar sacola"></button>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Sacola" aria-hidden="true">
+    <div class="drawer-header">
+      <div>
+        <span class="drawer-kicker">Pedido</span>
+        <h2>Sacola</h2>
+      </div>
+      <button type="button" class="icon-button" data-close-cart aria-label="Fechar sacola">
+        <span aria-hidden="true">x</span>
+      </button>
+    </div>
+    <div class="drawer-items" id="drawerItems"></div>
+    <div class="drawer-footer">
+      <div class="drawer-count" id="totalItemsCount"></div>
+      <div class="drawer-total-row">
+        <span>Total</span>
+        <strong id="drawerTotal">R$ 0,00</strong>
+      </div>
+      <button type="button" class="checkout-button" id="btnCheckout" data-checkout disabled>
+        Finalizar no WhatsApp
+      </button>
+      <button type="button" class="clear-cart-button" data-clear-cart>Limpar sacola</button>
+    </div>
+  </aside>
+
+  <header class="site-header">
+    <a href="/" class="brand-lockup" aria-label="Os Cobra da Bola">
+      <span class="brand-mark" aria-hidden="true">OC</span>
+      <span class="brand-copy">
+        <strong>Os Cobra</strong>
+        <small>da Bola</small>
+      </span>
+    </a>
+
+    <nav class="main-nav" aria-label="Navegacao principal">
+      <a href="#vitrine">Vitrine</a>
+      <a href="#clube">Clube de pontos</a>
+      <a href="/meus-pontos">Meus pontos</a>
+    </nav>
+
+    <button type="button" class="bag-button" data-open-cart aria-label="Abrir sacola">
+      <span>Sacola</span>
+      <strong id="cartBadge">0</strong>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero-section">
+      <div class="hero-copy">
+        <span class="eyebrow">Guaxupe, MG / Drop de ataque</span>
+        <h1>Veste quem tem a senha</h1>
+        <p>
+          Vista o jogo. Ataque a rua. Roupa esportiva com presença pesada, contraste alto e compra direta pelo WhatsApp.
+        </p>
+        <div class="hero-actions">
+          <a href="#vitrine" class="primary-link">Ver colecao</a>
+          <button type="button" class="secondary-link" data-open-cart>Ver sacola</button>
+        </div>
+      </div>
+
+      <div class="hero-showcase" aria-label="Produtos em destaque">
+        {% set hero_products = produtos[:3] %}
+        {% if hero_products %}
+          {% for p in hero_products %}
+            <article class="hero-tile hero-tile-{{ loop.index }}">
+              {% if p.imagem %}
+                <img src="{{ p.imagem }}" alt="{{ p.nome }}" />
+              {% else %}
+                <div class="image-placeholder">Os Cobra</div>
+              {% endif %}
+              <div class="hero-tile-info">
+                <span>{{ p.categoria or 'Drop atual' }}</span>
+                <strong>{{ p.nome }}</strong>
+              </div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <article class="hero-tile hero-tile-1 hero-tile-empty">
+            <div class="image-placeholder">Drop</div>
+          </article>
+          <article class="hero-tile hero-tile-2 hero-tile-empty">
+            <div class="image-placeholder">Premium</div>
+          </article>
+          <article class="hero-tile hero-tile-3 hero-tile-empty">
+            <div class="image-placeholder">Sportswear</div>
+          </article>
+        {% endif %}
+      </div>
+    </section>
+
+    <div class="brand-strip" aria-label="Letreiro de destaques da loja">
+      <div class="brand-strip-track">
+        <span>Veste quem tem a senha</span>
+        <span>Pronta entrega selecionada</span>
+        <span>Compra pelo WhatsApp</span>
+        <span>20 pontos a cada R$ 89</span>
+        <span>300 pontos viram desconto</span>
+        <span>Novidades toda semana</span>
+        <span>Veste quem tem a senha</span>
+        <span>Pronta entrega selecionada</span>
+        <span>Compra pelo WhatsApp</span>
+        <span>20 pontos a cada R$ 89</span>
+        <span>300 pontos viram desconto</span>
+        <span>Novidades toda semana</span>
+      </div>
+    </div>
+
+    <section class="collection-section" id="vitrine">
+      <div class="collection-heading">
+        <div>
+          <span class="eyebrow">Vitrine</span>
+          <h2>Drop em campo</h2>
+          <p>{{ produtos|length }} produto{% if produtos|length != 1 %}s{% endif %} prontos para entrar no pedido.</p>
+        </div>
+        <div class="filter-bar" aria-label="Filtrar produtos por categoria">
+          <button type="button" class="filter-chip is-active" data-filter="todos">Todos</button>
+          {% for cat in categorias %}
+            <button type="button" class="filter-chip" data-filter="{{ cat }}">{{ cat | capitalize }}</button>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if produtos %}
+        <div class="product-grid" id="productGrid">
+          {% for p in produtos %}
+            {% set tam_lista = p.tamanhos.split(',') | map('trim') | reject('equalto','') | list if p.tamanhos else [] %}
+            <article
+              class="product-card {% if loop.index == 1 %}product-card-featured{% endif %}"
+              data-product-card
+              data-category="{{ p.categoria }}"
+              data-product-id="{{ p.id }}"
+              data-name="{{ p.nome }}"
+              data-price="{{ p.preco_raw }}"
+              data-stock="{{ p.estoque }}"
+              data-image="{{ p.imagem }}"
+            >
+              <div class="product-media">
+                {% if p.imagem %}
+                  <img src="{{ p.imagem }}" alt="{{ p.nome }}" loading="lazy" />
+                {% else %}
+                  <div class="product-image-empty">Sem foto</div>
+                {% endif %}
+
+                <div class="product-badges">
+                  {% if p.disponibilidade == 'Pronta Entrega' %}
+                    <span>Pronta entrega</span>
+                  {% else %}
+                    <span>Sob encomenda</span>
+                  {% endif %}
+                  {% if p.estoque == 0 %}
+                    <span class="sold-out-badge">Sem estoque</span>
+                  {% endif %}
+                </div>
+
+                <div class="price-reveal">
+                  <span>R$ {{ p.preco }}</span>
+                  <button
+                    type="button"
+                    class="quick-buy-button"
+                    data-add-button
+                    data-product-id="{{ p.id }}"
+                    {% if p.estoque == 0 %}disabled{% endif %}
+                  >
+                    Comprar
+                  </button>
+                </div>
+              </div>
+
+              <div class="product-info">
+                <div class="product-topline">
+                  <span>{{ p.categoria or 'Produto' }}</span>
+                  {% if p.estoque > 0 %}
+                    <small>Estoque {{ p.estoque }}</small>
+                  {% else %}
+                    <small>Sem estoque</small>
+                  {% endif %}
+                </div>
+
+                <div class="product-title-row">
+                  <h3>{{ p.nome }}</h3>
+                  <strong>R$ {{ p.preco }}</strong>
+                </div>
+
+                {% if tam_lista %}
+                  <div class="size-group">
+                    <span>Tamanho</span>
+                    <div class="size-options" data-size-group>
+                      {% for t in tam_lista %}
+                        <button
+                          type="button"
+                          class="size-option"
+                          data-size-option
+                          data-product-id="{{ p.id }}"
+                          data-size="{{ t }}"
+                        >
+                          {{ t }}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="single-size">Tamanho unico</div>
+                {% endif %}
+
+                <button
+                  type="button"
+                  class="add-to-bag-button"
+                  data-add-button
+                  data-product-id="{{ p.id }}"
+                  {% if p.estoque == 0 %}disabled{% endif %}
+                >
+                  Adicionar a sacola
+                </button>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-collection">
+          <strong>Vitrine em preparacao</strong>
+          <p>Nenhum produto disponivel no momento. Volte em breve para conferir o proximo drop.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="loyalty-section" id="clube">
+      <div class="loyalty-copy">
+        <span class="eyebrow">Clube de pontos</span>
+        <h2>Compra forte volta em desconto.</h2>
+        <p>
+          Informe seu WhatsApp no pedido e acompanhe seus pontos sem criar conta. A experiencia fica simples, segura e facil de repetir.
+        </p>
+      </div>
+      <div class="loyalty-cards">
+        <article>
+          <strong>Cada R$ 89</strong>
+          <span>soma 20 pontos</span>
+        </article>
+        <article>
+          <strong>300</strong>
+          <span>pontos para desconto</span>
+        </article>
+        <article>
+          <strong>40%</strong>
+          <span>off no resgate</span>
+        </article>
+      </div>
+      <a href="/meus-pontos" class="primary-link loyalty-link">Consultar pontos</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <a href="/" class="brand-lockup footer-brand" aria-label="Os Cobra da Bola">
+        <span class="brand-mark" aria-hidden="true">OC</span>
+        <span class="brand-copy">
+          <strong>Os Cobra</strong>
+          <small>da Bola</small>
+        </span>
+      </a>
+      <p>Sportswear direto de Guaxupe, MG, com vitrine forte e pedido pelo WhatsApp.</p>
+    </div>
+    <nav aria-label="Links do rodape">
+      <a href="#vitrine">Vitrine</a>
+      <a href="/meus-pontos">Meus pontos</a>
+      <a href="/login">Area do fornecedor</a>
+    </nav>
+    <small>© 2026 Os Cobra da Bola. Todos os direitos reservados.</small>
+  </footer>
+
+  <script>
+    const WHATSAPP_NUM = {{ whatsapp_num|tojson }};
+    const STORAGE_KEY = 'cobra_cart_v4';
+
+    function fmt(value) {
+      return Number(value).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function parsePrecoBR(value) {
+      let raw = String(value).replace(/[R$\s]/g, '').trim();
+      if (raw.includes(',') && raw.includes('.')) {
+        raw = raw.replace(/\./g, '').replace(',', '.');
+      } else if (raw.includes(',')) {
+        raw = raw.replace(',', '.');
+      }
+      return parseFloat(raw) || 0;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showToast(message, type = 'success') {
+      const wrap = document.getElementById('toastWrap');
+      if (!wrap) return;
+
+      const toast = document.createElement('div');
+      toast.className = `toast-message ${type}`;
+      toast.textContent = message;
+      wrap.innerHTML = '';
+      wrap.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('is-leaving');
+        setTimeout(() => toast.remove(), 320);
+      }, 2600);
+    }
+
+    function replaceBrokenImage(img) {
+      if (!img || img.dataset.fallbackApplied === 'true') return;
+      img.dataset.fallbackApplied = 'true';
+
+      const fallback = document.createElement('div');
+      if (img.closest('.cart-item-media')) {
+        fallback.className = 'cart-item-placeholder';
+        fallback.textContent = 'OC';
+      } else if (img.closest('.hero-tile')) {
+        fallback.className = 'image-placeholder';
+        fallback.textContent = 'Os Cobra';
+      } else {
+        fallback.className = 'product-image-empty';
+        fallback.textContent = 'Sem foto';
+      }
+
+      img.replaceWith(fallback);
+    }
+
+    function repairBrokenImages() {
+      document.querySelectorAll('img').forEach(img => {
+        if (img.complete && img.naturalWidth === 0) replaceBrokenImage(img);
+      });
+    }
+
+    function carregarCarrinho() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function salvarCarrinho(cart) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+    }
+
+    function itemKey(id, size) {
+      return `${id}__${size}`;
+    }
+
+    function getCardById(id) {
+      return Array.from(document.querySelectorAll('[data-product-card]'))
+        .find(card => card.dataset.productId === String(id));
+    }
+
+    function getDados(id) {
+      const card = getCardById(id);
+      if (!card) return null;
+
+      return {
+        id: card.dataset.productId,
+        nome: card.dataset.name,
+        preco: parsePrecoBR(card.dataset.price),
+        estoque: parseInt(card.dataset.stock, 10) || 0,
+        imagem: card.dataset.image || ''
+      };
+    }
+
+    function selectedSize(card) {
+      const selected = card ? card.querySelector('[data-size-option].is-selected') : null;
+      return selected ? selected.dataset.size : 'UNICO';
+    }
+
+    function syncAddButtonsForProduct(id) {
+      const card = getCardById(id);
+      const dados = getDados(id);
+      if (!card || !dados) return;
+
+      const sizeGroup = card.querySelector('[data-size-group]');
+      const hasSizes = Boolean(sizeGroup);
+      const size = selectedSize(card);
+      const cart = carregarCarrinho();
+      const item = cart.find(entry => entry.key === itemKey(id, size));
+      const qty = item ? item.qty : 0;
+      const limitReached = hasSizes && size === 'UNICO' ? false : qty >= dados.estoque;
+
+      document.querySelectorAll('[data-add-button]').forEach(button => {
+        if (button.dataset.productId !== String(id)) return;
+        button.disabled = dados.estoque <= 0 || limitReached;
+        if (dados.estoque <= 0) {
+          button.textContent = 'Sem estoque';
+        } else if (limitReached) {
+          button.textContent = 'Limite atingido';
+        } else {
+          button.textContent = button.classList.contains('quick-buy-button') ? 'Comprar' : 'Adicionar a sacola';
+        }
+      });
+    }
+
+    function syncAllButtons() {
+      document.querySelectorAll('[data-product-card]').forEach(card => {
+        syncAddButtonsForProduct(card.dataset.productId);
+      });
+    }
+
+    function selecionarTamanho(button) {
+      const card = button.closest('[data-product-card]');
+      if (!card) return;
+
+      card.querySelectorAll('[data-size-option]').forEach(sizeButton => {
+        sizeButton.classList.remove('is-selected');
+      });
+      button.classList.add('is-selected');
+      syncAddButtonsForProduct(button.dataset.productId);
+    }
+
+    function adicionarAoCarrinho(id) {
+      const card = getCardById(id);
+      const dados = getDados(id);
+      if (!card || !dados || dados.estoque <= 0) return;
+
+      const sizeGroup = card.querySelector('[data-size-group]');
+      let tamanho = 'UNICO';
+      if (sizeGroup) {
+        const selected = card.querySelector('[data-size-option].is-selected');
+        if (!selected) {
+          showToast('Escolha um tamanho para continuar.', 'error');
+          sizeGroup.classList.remove('needs-attention');
+          void sizeGroup.offsetWidth;
+          sizeGroup.classList.add('needs-attention');
+          return;
+        }
+        tamanho = selected.dataset.size;
+      }
+
+      const cart = carregarCarrinho();
+      const key = itemKey(id, tamanho);
+      const existingIndex = cart.findIndex(item => item.key === key);
+
+      if (existingIndex >= 0) {
+        if (cart[existingIndex].qty >= dados.estoque) {
+          showToast(`Estoque maximo: ${dados.estoque} unidade(s).`, 'error');
+          return;
+        }
+        cart[existingIndex].qty += 1;
+      } else {
+        cart.push({
+          key,
+          id: dados.id,
+          nome: dados.nome,
+          tamanho,
+          preco: dados.preco,
+          estoque: dados.estoque,
+          imagem: dados.imagem,
+          qty: 1
+        });
+      }
+
+      salvarCarrinho(cart);
+      atualizarUI();
+      syncAddButtonsForProduct(id);
+      showToast(`${dados.nome} adicionado a sacola.`);
+
+      document.querySelectorAll('[data-add-button]').forEach(button => {
+        if (button.dataset.productId !== String(id)) return;
+        button.classList.add('is-added');
+        button.textContent = 'Adicionado';
+        setTimeout(() => {
+          button.classList.remove('is-added');
+          syncAddButtonsForProduct(id);
+        }, 900);
+      });
+    }
+
+    function alterarQtd(key, delta) {
+      const cart = carregarCarrinho();
+      const index = cart.findIndex(item => item.key === key);
+      if (index < 0) return;
+
+      const nextQty = cart[index].qty + delta;
+      if (nextQty < 1) {
+        removerItem(key);
+        return;
+      }
+
+      if (nextQty > cart[index].estoque) {
+        showToast(`Estoque maximo: ${cart[index].estoque} unidade(s).`, 'error');
+        return;
+      }
+
+      cart[index].qty = nextQty;
+      salvarCarrinho(cart);
+      atualizarUI();
+      syncAddButtonsForProduct(cart[index].id);
+    }
+
+    function removerItem(key) {
+      const cart = carregarCarrinho();
+      const removed = cart.find(item => item.key === key);
+      salvarCarrinho(cart.filter(item => item.key !== key));
+      atualizarUI();
+      if (removed) syncAddButtonsForProduct(removed.id);
+    }
+
+    function limparCarrinho() {
+      const cart = carregarCarrinho();
+      salvarCarrinho([]);
+      atualizarUI();
+      cart.forEach(item => syncAddButtonsForProduct(item.id));
+    }
+
+    function atualizarUI() {
+      const cart = carregarCarrinho();
+      const total = cart.reduce((sum, item) => sum + item.preco * item.qty, 0);
+      const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+      const badge = document.getElementById('cartBadge');
+      const totalEl = document.getElementById('drawerTotal');
+      const countEl = document.getElementById('totalItemsCount');
+      const checkout = document.getElementById('btnCheckout');
+      const wrap = document.getElementById('drawerItems');
+
+      if (badge) {
+        badge.textContent = totalQty;
+        badge.classList.toggle('has-items', totalQty > 0);
+      }
+      if (totalEl) totalEl.textContent = `R$ ${fmt(total)}`;
+      if (countEl) {
+        countEl.textContent = totalQty > 0
+          ? `${totalQty} ${totalQty === 1 ? 'item' : 'itens'} na sacola`
+          : '';
+      }
+      if (checkout) checkout.disabled = cart.length === 0;
+
+      if (!wrap) return;
+      if (cart.length === 0) {
+        wrap.innerHTML = `
+          <div class="cart-empty">
+            <strong>Sua sacola esta vazia.</strong>
+            <p>Escolha uma peca da vitrine para iniciar seu pedido.</p>
+          </div>
+        `;
+        return;
+      }
+
+      wrap.innerHTML = cart.map(item => {
+        const encodedKey = encodeURIComponent(item.key);
+        const image = item.imagem
+          ? `<img src="${escapeHtml(item.imagem)}" alt="${escapeHtml(item.nome)}" />`
+          : `<div class="cart-item-placeholder">OC</div>`;
+
+        return `
+          <article class="cart-item">
+            <div class="cart-item-media">${image}</div>
+            <div class="cart-item-body">
+              <strong>${escapeHtml(item.nome)}</strong>
+              <span>Tam: ${escapeHtml(item.tamanho)}</span>
+              <small>R$ ${fmt(item.preco)} x ${item.qty}</small>
+            </div>
+            <div class="cart-item-actions">
+              <button type="button" data-cart-action="decrease" data-key="${encodedKey}" aria-label="Diminuir quantidade">-</button>
+              <span>${item.qty}</span>
+              <button type="button" data-cart-action="increase" data-key="${encodedKey}" aria-label="Aumentar quantidade" ${item.qty >= item.estoque ? 'disabled' : ''}>+</button>
+              <button type="button" class="remove-item-button" data-cart-action="remove" data-key="${encodedKey}">Remover</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function setCartOpen(open) {
+      const overlay = document.getElementById('cartOverlay');
+      const drawer = document.getElementById('cartDrawer');
+      if (!overlay || !drawer) return;
+
+      if (open) atualizarUI();
+      overlay.classList.toggle('is-open', open);
+      drawer.classList.toggle('is-open', open);
+      drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+      document.body.classList.toggle('cart-is-open', open);
+    }
+
+    function finalizarPedido() {
+      const cart = carregarCarrinho();
+      if (cart.length === 0) return;
+
+      let message = '*OS COBRA DA BOLA | Novo pedido*\\n\\n';
+      cart.forEach(item => {
+        message += `${item.qty}x ${item.nome}`;
+        if (item.tamanho !== 'UNICO') message += ` (Tam: ${item.tamanho})`;
+        message += `\\nR$ ${fmt(item.preco)} cada | Subtotal: R$ ${fmt(item.preco * item.qty)}\\n\\n`;
+      });
+
+      const total = cart.reduce((sum, item) => sum + item.preco * item.qty, 0);
+      message += `Total: R$ ${fmt(total)}\\n\\n`;
+      message += 'Vou informar meu WhatsApp para acumular pontos.';
+
+      window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(message)}`, '_blank');
+      salvarCarrinho([]);
+      atualizarUI();
+      syncAllButtons();
+      setCartOpen(false);
+      showToast('Pedido enviado para o WhatsApp.');
+    }
+
+    function filtrarProdutos(category) {
+      document.querySelectorAll('[data-filter]').forEach(button => {
+        button.classList.toggle('is-active', button.dataset.filter === category);
+      });
+
+      document.querySelectorAll('[data-product-card]').forEach(card => {
+        const visible = category === 'todos' || card.dataset.category === category;
+        card.classList.toggle('is-hidden', !visible);
+      });
+    }
+
+    document.addEventListener('click', event => {
+      const sizeButton = event.target.closest('[data-size-option]');
+      if (sizeButton) {
+        selecionarTamanho(sizeButton);
+        return;
+      }
+
+      const addButton = event.target.closest('[data-add-button]');
+      if (addButton) {
+        adicionarAoCarrinho(addButton.dataset.productId);
+        return;
+      }
+
+      if (event.target.closest('[data-open-cart]')) {
+        setCartOpen(true);
+        return;
+      }
+
+      if (event.target.closest('[data-close-cart]') || event.target.id === 'cartOverlay') {
+        setCartOpen(false);
+        return;
+      }
+
+      if (event.target.closest('[data-clear-cart]')) {
+        limparCarrinho();
+        return;
+      }
+
+      if (event.target.closest('[data-checkout]')) {
+        finalizarPedido();
+        return;
+      }
+
+      const filterButton = event.target.closest('[data-filter]');
+      if (filterButton) {
+        filtrarProdutos(filterButton.dataset.filter);
+        return;
+      }
+
+      const cartAction = event.target.closest('[data-cart-action]');
+      if (cartAction) {
+        const key = decodeURIComponent(cartAction.dataset.key);
+        if (cartAction.dataset.cartAction === 'increase') alterarQtd(key, 1);
+        if (cartAction.dataset.cartAction === 'decrease') alterarQtd(key, -1);
+        if (cartAction.dataset.cartAction === 'remove') removerItem(key);
+      }
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') setCartOpen(false);
+    });
+
+    document.addEventListener('error', event => {
+      if (event.target && event.target.tagName === 'IMG') {
+        replaceBrokenImage(event.target);
+      }
+    }, true);
+    window.addEventListener('load', repairBrokenImages);
+
+    setTimeout(() => {
+      document.querySelectorAll('.flash-message').forEach(message => {
+        message.classList.add('is-leaving');
+        setTimeout(() => message.remove(), 320);
+      });
+    }, 5200);
+
+    atualizarUI();
+    repairBrokenImages();
+    setTimeout(repairBrokenImages, 800);
+    syncAllButtons();
+  </script>
+</body>
+</html>

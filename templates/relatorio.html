@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:#06080a; --deep:#0a0e11; --surface:#111519; --card:#161b20;
+      --border:#232c35; --border-lit:#2e3a46; --gold:#f5c518;
+      --gold-soft:rgba(245,197,24,.08); --white:#eef2f5; --white-dim:#8a9bb0;
+      --success:#22c55e; --danger:#ef4444; --r:10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--deep);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh}
+    .admin-nav{background:rgba(6,8,10,.98);border-bottom:1px solid var(--border);padding:0 1.5rem;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}
+    .nav-brand{display:flex;align-items:center;gap:.5rem;text-decoration:none}
+    .nav-icon{width:32px;height:32px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center}
+    .nav-title{font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:3px;color:var(--white)}
+    .nav-title em{color:var(--gold);font-style:normal}
+    .nav-links{display:flex;gap:.25rem}
+    .nav-links a{color:var(--white-dim);text-decoration:none;font-size:.82rem;font-weight:600;padding:.38rem .75rem;border-radius:6px;white-space:nowrap}
+    .nav-links a:hover,.nav-links a.active{color:var(--gold);background:var(--gold-soft)}
+    .nav-links .btn-sair{color:var(--danger)!important}
+    .container{max-width:1180px;margin:0 auto;padding:2rem 1rem 4rem}
+    .page-header{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;margin-bottom:1.5rem}
+    h1{font-family:'Bebas Neue',cursive;font-size:3rem;line-height:.9;letter-spacing:2px}
+    h1 em{color:var(--gold);font-style:normal}
+    .sub{color:var(--white-dim);font-size:.9rem;margin-top:.55rem;line-height:1.6}
+    .report-form{display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;align-items:end;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:1.25rem}
+    label{display:block;font-size:.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--white-dim);margin-bottom:.4rem}
+    input[type="date"]{width:100%;padding:.75rem .9rem;background:var(--surface);border:1px solid var(--border-lit);color:var(--white);border-radius:var(--r);font:inherit}
+    input[type="date"]:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,197,24,.12)}
+    .btn{border:0;border-radius:var(--r);padding:.82rem 1rem;background:var(--gold);color:var(--ink);font-weight:900;cursor:pointer;text-transform:uppercase}
+    .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1rem;margin-bottom:1.25rem}
+    .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
+    .stat h3{font-size:.68rem;color:var(--white-dim);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:.45rem}
+    .stat p{font-family:'Bebas Neue',cursive;font-size:2rem;line-height:1;color:var(--white)}
+    .stat.money p,.stat.points p{color:var(--gold)}
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:1rem}
+    .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+    .panel-head{display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:1rem;border-bottom:1px solid var(--border)}
+    .panel-head h2{font-size:.78rem;letter-spacing:1.6px;text-transform:uppercase}
+    .panel-head span{color:var(--white-dim);font-size:.8rem}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:.82rem 1rem;border-bottom:1px solid rgba(245,197,24,.12);text-align:left;font-size:.86rem}
+    th{font-size:.68rem;text-transform:uppercase;letter-spacing:1.4px;color:var(--gold);background:rgba(245,197,24,.06)}
+    td{color:var(--white)}
+    .muted{color:var(--white-dim);font-size:.78rem}
+    .money{color:var(--gold);font-weight:800}
+    .empty{padding:2rem;text-align:center;color:var(--white-dim)}
+    .rank-list{display:grid;gap:.75rem;padding:1rem}
+    .rank-item{border:1px solid rgba(245,197,24,.16);border-radius:var(--r);padding:.85rem;background:rgba(245,197,24,.045)}
+    .rank-item strong{display:block;margin-bottom:.25rem}
+    .rank-meta{display:flex;justify-content:space-between;gap:.75rem;color:var(--white-dim);font-size:.78rem}
+    .flashes{margin-bottom:1rem}
+    .flash{padding:.75rem 1rem;border-radius:var(--r);font-size:.88rem}
+    .flash-error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5}
+    @media(max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.report-form{grid-template-columns:1fr}.page-header{display:block}.hide-sm{display:none}}
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+<header class="admin-nav">
+  <a href="/admin/painel" class="nav-brand">
+    <div class="nav-icon">🐍</div>
+    <span class="nav-title">OS <em>COBRA</em></span>
+  </a>
+  <nav class="nav-links">
+    <a href="/admin/painel" class="hide-sm">📦 Produtos</a>
+    <a href="/admin/cadastrar" class="hide-sm">➕ Cadastrar</a>
+    <a href="/admin/lancar-venda" class="hide-sm">💰 Lançar Venda</a>
+    <a href="/admin/relatorio" class="active">📊 Relatório</a>
+    <a href="/logout" class="btn-sair">Sair →</a>
+  </nav>
+</header>
+
+<main class="container">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="flashes">
+        {% for cat, msg in msgs %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="page-header">
+    <div>
+      <h1>GERAR <em>RELATÓRIO</em></h1>
+      <p class="sub">Controle o que entrou em vendas e o que saiu em produtos no período escolhido.</p>
+    </div>
+  </div>
+
+  <form class="report-form" method="GET" action="/admin/relatorio">
+    <div>
+      <label for="inicio">Data de início</label>
+      <input type="date" id="inicio" name="inicio" value="{{ inicio }}" required>
+    </div>
+    <div>
+      <label for="fim">Data final</label>
+      <input type="date" id="fim" name="fim" value="{{ fim }}" required>
+    </div>
+    <button type="submit" class="btn">Gerar relatório</button>
+  </form>
+
+  <section class="stats" aria-label="Resumo do período">
+    <div class="stat money"><h3>Entrou</h3><p>R$ {{ stats.entradas_fmt }}</p></div>
+    <div class="stat"><h3>Saiu</h3><p>{{ stats.saidas }} un.</p></div>
+    <div class="stat"><h3>Vendas</h3><p>{{ stats.vendas }}</p></div>
+    <div class="stat points"><h3>Pontos</h3><p>{{ stats.pontos }}</p></div>
+    <div class="stat money"><h3>Ticket Médio</h3><p>R$ {{ stats.ticket_medio }}</p></div>
+  </section>
+
+  <section class="grid">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Vendas no período</h2>
+        <span>{{ inicio }} até {{ fim }}</span>
+      </div>
+      {% if vendas %}
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Cliente</th>
+              <th>Produto</th>
+              <th>Qtd</th>
+              <th>Valor</th>
+              <th>Pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for venda in vendas %}
+              <tr>
+                <td>{{ venda.data }}</td>
+                <td>
+                  <strong>{{ venda.cliente or "Cliente" }}</strong>
+                  <div class="muted">{{ venda.telefone }}</div>
+                </td>
+                <td>
+                  {{ venda.produto }}
+                  <div class="muted">{{ venda.produto_id }}</div>
+                </td>
+                <td>{{ venda.quantidade }}</td>
+                <td class="money">R$ {{ venda.valor_fmt }}</td>
+                <td>{{ venda.pontos }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty">Nenhuma venda encontrada nesse período.</div>
+      {% endif %}
+    </div>
+
+    <aside class="panel">
+      <div class="panel-head">
+        <h2>Produtos que saíram</h2>
+        <span>{{ resumo_produtos|length }} item(ns)</span>
+      </div>
+      {% if resumo_produtos %}
+        <div class="rank-list">
+          {% for item in resumo_produtos %}
+            <div class="rank-item">
+              <strong>{{ item.produto }}</strong>
+              <div class="rank-meta">
+                <span>{{ item.quantidade }} un. / {{ item.vendas }} venda(s)</span>
+                <span class="money">R$ {{ item.receita_fmt }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty">Sem saída de produto no período.</div>
+      {% endif %}
+    </aside>
+  </section>
+</main>
+</body>
+</html>

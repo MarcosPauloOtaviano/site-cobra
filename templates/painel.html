@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Fornecedor — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:#06080a; --deep:#0a0e11; --surface:#111519; --card:#161b20; --card-h:#1c2229;
+      --border:#232c35; --border-lit:#2e3a46;
+      --gold:#f5c518; --gold-dim:#c9a114; --gold-soft:rgba(245,197,24,.07); --gold-mid:rgba(245,197,24,.12);
+      --white:#eef2f5; --white-dim:#8a9bb0;
+      --danger:#ef4444; --success:#22c55e; --warn:#f59e0b; --r:10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--deep);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh}
+
+    /* NAV */
+    .admin-nav{
+      background:rgba(6,8,10,.98); border-bottom:1px solid var(--border);
+      padding:0 1.5rem; height:64px;
+      display:flex;align-items:center;justify-content:space-between;gap:1rem;
+      position:sticky;top:0;z-index:100;
+      backdrop-filter:blur(16px);
+    }
+    .nav-brand{display:flex;align-items:center;gap:.55rem;text-decoration:none}
+    .nav-icon{width:34px;height:34px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+    .nav-title{font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:3px;color:var(--white)}
+    .nav-title em{color:var(--gold);font-style:normal}
+    .nav-links{display:flex;align-items:center;gap:.25rem;flex-wrap:wrap}
+    .nav-links a{
+      color:var(--white-dim);text-decoration:none;font-size:.82rem;font-weight:500;
+      padding:.38rem .75rem;border-radius:6px;transition:all .2s;white-space:nowrap;
+    }
+    .nav-links a:hover{color:var(--white);background:var(--surface)}
+    .nav-links a.active{color:var(--gold);background:var(--gold-soft)}
+    .nav-links .btn-sair{
+      color:var(--danger)!important;border:1px solid rgba(239,68,68,.3);
+      margin-left:.25rem;
+    }
+    .nav-links .btn-sair:hover{background:rgba(239,68,68,.1)!important}
+    .nav-fornecedor{font-size:.8rem;color:var(--white-dim);white-space:nowrap}
+    .nav-fornecedor strong{color:var(--gold)}
+
+    @media(max-width:700px){
+      .nav-links .hide-sm{display:none}
+      .admin-nav{padding:0 1rem}
+    }
+
+    /* CONTAINER */
+    .container{max-width:1200px;margin:0 auto;padding:2.5rem 1.25rem}
+
+    /* FLASH */
+    .flashes{margin-bottom:1.5rem}
+    .flash{padding:.7rem 1rem;border-radius:var(--r);font-size:.86rem;font-weight:500;margin-bottom:.4rem}
+    .flash-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:var(--success)}
+    .flash-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);color:var(--danger)}
+
+    /* PAGE HEADER */
+    .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;gap:1rem;flex-wrap:wrap}
+    .page-header h2{font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:2px}
+    .page-header h2 em{color:var(--gold);font-style:normal}
+    .btn-novo{
+      display:inline-flex;align-items:center;gap:.4rem;
+      background:var(--gold);color:var(--ink);border:none;border-radius:var(--r);
+      padding:.6rem 1.2rem;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.85rem;
+      cursor:pointer;text-decoration:none;transition:background .2s,box-shadow .2s;white-space:nowrap;
+    }
+    .btn-novo:hover{background:#ffe14d;box-shadow:0 0 20px rgba(245,197,24,.35)}
+
+    /* STATS */
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2.5rem}
+    .stat{
+      background:var(--card);border:1px solid var(--border);border-radius:calc(var(--r)*1.5);
+      padding:1.25rem; border-left:4px solid var(--gold); position:relative;overflow:hidden;
+    }
+    .stat.warn{border-left-color:var(--warn)}
+    .stat::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 80% at 100% 0%,var(--gold-soft),transparent);pointer-events:none}
+    .stat h3{font-size:.7rem;font-weight:700;color:var(--white-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.6rem}
+    .stat p{font-family:'Bebas Neue',cursive;font-size:2.8rem;color:var(--white);letter-spacing:1px;line-height:1}
+    @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:400px){.stats{grid-template-columns:1fr 1fr}}
+
+    /* TABLE */
+    .table-wrap{
+      background:var(--card);border:1px solid var(--border);border-radius:calc(var(--r)*1.5);
+      overflow:hidden;overflow-x:auto;
+    }
+    table{width:100%;border-collapse:collapse;min-width:580px}
+    th{
+      background:var(--surface);padding:1rem 1.25rem;text-align:left;
+      font-size:.7rem;font-weight:700;color:var(--white-dim);letter-spacing:1.5px;text-transform:uppercase;
+      border-bottom:1px solid var(--border);white-space:nowrap;
+    }
+    td{padding:.9rem 1.25rem;border-bottom:1px solid var(--border);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.015)}
+
+    .td-id{font-family:monospace;font-size:.78rem;color:var(--white-dim)}
+    .td-prod strong{display:block;font-size:.9rem;color:var(--white);margin-bottom:.15rem}
+    .td-prod span{font-size:.74rem;color:var(--white-dim)}
+    .td-preco{font-family:'Bebas Neue',cursive;font-size:1.3rem;color:var(--gold);letter-spacing:.5px}
+
+    .badge{padding:.22rem .7rem;border-radius:999px;font-size:.68rem;font-weight:700;white-space:nowrap}
+    .badge-pronta{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--success)}
+    .badge-encomenda{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--warn)}
+    .stock-ok{color:var(--success);font-weight:600}
+    .stock-out{color:var(--danger);font-weight:600}
+
+    .acoes{display:flex;gap:.5rem;align-items:center}
+    .btn-edit,.btn-del{
+      border:none;border-radius:6px;padding:.4rem .75rem;
+      font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;
+      cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:.25rem;
+      transition:all .2s;
+    }
+    .btn-edit{background:rgba(245,197,24,.12);color:var(--gold);border:1px solid rgba(245,197,24,.25)}
+    .btn-edit:hover{background:rgba(245,197,24,.22);border-color:var(--gold-dim)}
+    .btn-del{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.25)}
+    .btn-del:hover{background:rgba(239,68,68,.2)}
+
+    .empty-row td{text-align:center;padding:3rem;color:var(--white-dim)}
+    .empty-row a{color:var(--gold);text-decoration:none}
+    .empty-row a:hover{text-decoration:underline}
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+
+<header class="admin-nav">
+  <a href="/admin/painel" class="nav-brand">
+    <div class="nav-icon">🐍</div>
+    <span class="nav-title">OS <em>COBRA</em> DA BOLA</span>
+  </a>
+  <nav class="nav-links">
+    <a href="/admin/painel" class="active">📦 Produtos</a>
+    <a href="/admin/cadastrar" class="hide-sm">➕ Cadastrar</a>
+    <a href="/admin/lancar-venda" class="hide-sm">💰 Lançar Venda</a>
+    <a href="/admin/relatorio" class="hide-sm">📊 Gerar Relatório</a>
+    <a href="/logout" class="btn-sair">Sair →</a>
+  </nav>
+</header>
+
+<div class="container">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="flashes">
+        {% for cat, msg in msgs %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="page-header">
+    <div>
+      <h2>ESTOQUE DO <em>{{ fornecedor }}</em></h2>
+      <p style="color:var(--white-dim);font-size:.85rem;margin-top:.25rem">Gerencie seus produtos e estoque</p>
+    </div>
+    <a href="/admin/cadastrar" class="btn-novo">➕ Novo Produto</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <h3>Total de Produtos</h3>
+      <p>{{ stats.total }}</p>
+    </div>
+    <div class="stat">
+      <h3>Peças em Estoque</h3>
+      <p>{{ stats.estoque }}</p>
+    </div>
+    <div class="stat">
+      <h3>Pronta Entrega</h3>
+      <p>{{ stats.pronta }}</p>
+    </div>
+    <div class="stat warn">
+      <h3>Sob Encomenda</h3>
+      <p>{{ stats.encomenda }}</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Produto</th>
+          <th>Preço</th>
+          <th>Estoque</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for produto in produtos %}
+        <tr>
+          <td class="td-id">{{ produto.id }}</td>
+          <td class="td-prod">
+            <strong>{{ produto.nome }}</strong>
+            <span>{{ produto.categoria }}</span>
+          </td>
+          <td class="td-preco">R$ {{ produto.preco }}</td>
+          <td>
+            {% if produto.estoque > 0 %}
+              <span class="stock-ok">{{ produto.estoque }} un.</span>
+            {% else %}
+              <span class="stock-out">Sem estoque</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if produto.disponibilidade == 'Pronta Entrega' %}
+              <span class="badge badge-pronta">✓ Pronta Entrega</span>
+            {% else %}
+              <span class="badge badge-encomenda">⏳ Encomenda</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="acoes">
+              <a href="/admin/editar/{{ produto.id }}" class="btn-edit">✏️ Editar</a>
+              <form action="/admin/deletar/{{ produto.id }}" method="POST" style="display:inline"
+                    onsubmit="return confirm('Excluir {{ produto.nome }}?')">
+                <button type="submit" class="btn-del">🗑 Excluir</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr class="empty-row">
+          <td colspan="6">
+            Nenhum produto cadastrado. <a href="/admin/cadastrar">Cadastrar agora →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

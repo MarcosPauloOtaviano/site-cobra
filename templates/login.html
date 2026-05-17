@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acesso Restrito — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --ink:#06080a;--deep:#0a0e11;--surface:#111519;--card:#161b20;
+      --border:#232c35;--border-lit:#2e3a46;
+      --gold:#f5c518;--gold-dim:#c9a114;--gold-soft:rgba(245,197,24,.07);--gold-mid:rgba(245,197,24,.12);
+      --white:#eef2f5;--white-dim:#8a9bb0;--danger:#ef4444;--r:10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:var(--ink);color:var(--white);font-family:'DM Sans',sans-serif;
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      padding:1rem;
+      background-image:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(245,197,24,.06) 0%,transparent 65%),
+        repeating-linear-gradient(-55deg,transparent,transparent 30px,rgba(245,197,24,.015) 30px,rgba(245,197,24,.015) 31px);
+    }
+    .box{
+      width:100%;max-width:400px;
+      background:var(--card);border:1px solid var(--border);border-radius:calc(var(--r)*2);
+      padding:2.5rem;box-shadow:0 30px 80px rgba(0,0,0,.8);
+    }
+    .brand{margin-bottom:2rem;text-align:center}
+    .brand-icon{
+      width:54px;height:54px;background:var(--gold);border-radius:12px;
+      display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+      margin:0 auto .75rem;box-shadow:0 0 24px rgba(245,197,24,.3);
+    }
+    .brand-name{font-family:'Bebas Neue',cursive;font-size:1.6rem;letter-spacing:3px;color:var(--white)}
+    .brand-name em{color:var(--gold);font-style:normal}
+    .brand-sub{font-size:.82rem;color:var(--white-dim);margin-top:.2rem}
+
+    .flashes{margin-bottom:1.25rem}
+    .flash{padding:.65rem 1rem;border-radius:var(--r);font-size:.85rem;font-weight:500;margin-bottom:.4rem}
+    .flash-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);color:var(--danger)}
+    .flash-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:#4ade80}
+
+    .field{margin-bottom:1.1rem}
+    label{display:block;font-size:.73rem;font-weight:700;color:var(--white-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:.4rem}
+    input[type="text"],input[type="password"]{
+      width:100%;background:var(--surface);border:1px solid var(--border-lit);
+      color:var(--white);padding:.8rem 1rem;border-radius:var(--r);
+      font-family:'DM Sans',sans-serif;font-size:.93rem;
+      transition:border-color .2s,box-shadow .2s;
+    }
+    input:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(245,197,24,.1)}
+    input::placeholder{color:var(--white-dim);opacity:.6}
+    .btn{
+      width:100%;padding:.88rem;border:none;border-radius:var(--r);
+      background:var(--gold);color:var(--ink);
+      font-family:'DM Sans',sans-serif;font-weight:700;font-size:1rem;
+      cursor:pointer;margin-top:.5rem;
+      transition:background .2s,box-shadow .2s;letter-spacing:.5px;
+    }
+    .btn:hover{background:#ffe14d;box-shadow:0 0 24px rgba(245,197,24,.4)}
+    .divider{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+    .back{display:block;text-align:center;color:var(--white-dim);font-size:.85rem;text-decoration:none;transition:color .2s}
+    .back:hover{color:var(--gold)}
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+<div class="box">
+  <div class="brand">
+    <div class="brand-icon">🐍</div>
+    <div class="brand-name">OS <em>COBRA</em> DA BOLA</div>
+    <div class="brand-sub">Portal do Fornecedor</div>
+  </div>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="flashes">
+        {% for cat, msg in msgs %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="/login">
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" name="usuario" required placeholder="Seu usuário" autocomplete="username" />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" name="senha" required placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button type="submit" class="btn">Entrar no Painel →</button>
+  </form>
+
+  <hr class="divider" />
+  <a href="/" class="back">← Voltar para a loja</a>
+</div>
+</body>
+</html>

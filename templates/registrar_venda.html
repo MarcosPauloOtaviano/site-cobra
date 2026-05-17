@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lançar Venda — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --ink:#06080a;--deep:#0a0e11;--surface:#111519;--card:#161b20;
+      --border:#232c35;--border-lit:#2e3a46;
+      --gold:#f5c518;--gold-dim:#c9a114;--gold-soft:rgba(245,197,24,.07);
+      --white:#eef2f5;--white-dim:#8a9bb0;--danger:#ef4444;--success:#22c55e;--r:10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--deep);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;padding:2rem 1rem}
+
+    .admin-nav{
+      background:rgba(6,8,10,.98);border-bottom:1px solid var(--border);
+      padding:0 1.5rem;height:64px;display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);
+      margin:-2rem -1rem 2rem;
+    }
+    .nav-brand{display:flex;align-items:center;gap:.5rem;text-decoration:none}
+    .nav-icon{width:32px;height:32px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+    .nav-title{font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:3px;color:var(--white)}
+    .nav-title em{color:var(--gold);font-style:normal}
+    .nav-links{display:flex;gap:.25rem}
+    .nav-links a{color:var(--white-dim);text-decoration:none;font-size:.82rem;font-weight:500;padding:.38rem .75rem;border-radius:6px;transition:all .2s;white-space:nowrap}
+    .nav-links a:hover{color:var(--white);background:var(--surface)}
+    .nav-links a.active{color:var(--gold);background:var(--gold-soft)}
+    .nav-links .btn-sair{color:var(--danger)!important}
+    .nav-links .btn-sair:hover{background:rgba(239,68,68,.1)!important}
+    @media(max-width:560px){.nav-links .hide-sm{display:none}.admin-nav{padding:0 1rem}}
+
+    .page{max-width:600px;margin:0 auto}
+    .back-link{color:var(--white-dim);text-decoration:none;font-size:.85rem;display:inline-flex;align-items:center;gap:.3rem;margin-bottom:1.5rem;transition:color .2s}
+    .back-link:hover{color:var(--gold)}
+    h1{font-family:'Bebas Neue',cursive;font-size:2.2rem;letter-spacing:2px;margin-bottom:.25rem}
+    h1 em{color:var(--success);font-style:normal}
+    .sub{color:var(--white-dim);font-size:.88rem;margin-bottom:2rem;line-height:1.6}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:calc(var(--r)*1.5);padding:2rem}
+
+    .flashes{margin-bottom:1.5rem}
+    .flash{padding:.65rem 1rem;border-radius:var(--r);font-size:.85rem;font-weight:500;margin-bottom:.4rem}
+    .flash-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);color:var(--danger)}
+    .flash-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);color:var(--success)}
+
+    .sec-title{
+      font-size:.68rem;font-weight:700;color:var(--white-dim);letter-spacing:2px;text-transform:uppercase;
+      border-bottom:1px solid var(--border);padding-bottom:.5rem;margin:1.75rem 0 1.25rem;
+    }
+    .sec-title:first-child{margin-top:0}
+    .field{margin-bottom:1.25rem}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    @media(max-width:480px){.grid-2{grid-template-columns:1fr}}
+    label{display:block;font-size:.72rem;font-weight:700;color:var(--white-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:.4rem}
+    input[type="text"],input[type="number"],select,textarea{
+      width:100%;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border-lit);
+      color:var(--white);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:.9rem;
+      transition:border-color .2s,box-shadow .2s;
+    }
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(245,197,24,.1)}
+    input::placeholder,textarea::placeholder{color:var(--white-dim);opacity:.6}
+    select option{background:var(--surface)}
+    textarea{resize:vertical;min-height:80px}
+    .hint{font-size:.73rem;color:var(--white-dim);margin-top:.3rem}
+    .pts-preview{
+      background:var(--gold-soft);border:1px solid rgba(245,197,24,.2);border-radius:var(--r);
+      padding:.75rem 1rem;margin-top:1rem;
+      font-size:.85rem;color:var(--white-dim);display:flex;align-items:center;gap:.5rem;
+    }
+    .pts-preview strong{color:var(--gold);font-size:1.1rem}
+    .btn{
+      width:100%;padding:.88rem;border:none;border-radius:var(--r);
+      font-family:'DM Sans',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;margin-top:.5rem;
+      transition:all .2s;
+    }
+    .btn-success{background:var(--success);color:var(--ink)}
+    .btn-success:hover{background:#4ade80;box-shadow:0 0 24px rgba(34,197,94,.35)}
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+
+<header class="admin-nav">
+  <a href="/admin/painel" class="nav-brand">
+    <div class="nav-icon">🐍</div>
+    <span class="nav-title">OS <em>COBRA</em></span>
+  </a>
+  <nav class="nav-links">
+    <a href="/admin/painel" class="hide-sm">📦 Produtos</a>
+    <a href="/admin/cadastrar" class="hide-sm">➕ Cadastrar</a>
+    <a href="/admin/lancar-venda" class="active">💰 Lançar Venda</a>
+    <a href="/admin/relatorio" class="hide-sm">📊 Relatório</a>
+    <a href="/logout" class="btn-sair">Sair →</a>
+  </nav>
+</header>
+
+<div class="page">
+  <a href="/admin/painel" class="back-link">← Voltar ao painel</a>
+  <h1>LANÇAR <em>VENDA</em></h1>
+  <p class="sub">Registre a venda e pontue o cliente automaticamente. A cada R$ 89, o cliente recebe 20 pontos.</p>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="flashes">
+        {% for cat, msg in msgs %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <form action="/admin/lancar-venda" method="POST" id="venda-form">
+
+      <div class="sec-title">Dados do Cliente</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Telefone / WhatsApp</label>
+          <input type="text" name="telefone" required inputmode="tel" placeholder="Ex: (35) 99999-9999" id="telefone-input">
+          <p class="hint">Usado apenas para identificar os pontos do cliente. Sem documento pessoal.</p>
+        </div>
+        <div class="field">
+          <label>Nome do Cliente</label>
+          <input type="text" name="nome_cliente" required placeholder="Ex: João Silva">
+        </div>
+      </div>
+
+      <div class="sec-title">Produto e Valor</div>
+      <div class="field">
+        <label>Produto Vendido</label>
+        <select name="id_produto" required id="produto-select">
+          <option value="">-- Selecione o Produto --</option>
+          {% for p in produtos %}
+            <option value="{{ p.id }}" data-preco="{{ p.preco_raw }}" data-estoque="{{ p.estoque }}" {% if p.estoque == 0 %}disabled{% endif %}>
+              {{ p.nome }} (R$ {{ p.preco }} · estoque {{ p.estoque }})
+            </option>
+          {% endfor %}
+          <option value="OUTRO">Outro / Serviço Avulso</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Quantidade</label>
+          <input type="number" name="quantidade" required value="1" min="1" id="qtd-input">
+          <p class="hint" id="estoque-hint">A baixa no estoque será automática.</p>
+        </div>
+        <div class="field">
+          <label>Valor Total da Venda (R$)</label>
+          <input type="text" name="valor" required inputmode="decimal" placeholder="Ex: 150,00 ou 150.00" id="valor-input">
+        </div>
+      </div>
+      <div class="pts-preview" id="pts-preview">
+        🏆 O cliente receberá: <strong id="pts-val">— pontos</strong>
+      </div>
+      <div class="field">
+        <label>Observações (Opcional)</label>
+        <textarea name="obs" placeholder="Tamanho M, pagamento em dinheiro..."></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-success">✓ Registrar Venda e Pontuar Cliente</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const telefoneInput = document.getElementById('telefone-input');
+  if (telefoneInput) {
+    telefoneInput.addEventListener('input', () => {
+      let v = telefoneInput.value.replace(/\D/g, '');
+      if (v.startsWith('55') && v.length > 11) v = v.slice(2);
+      if (v.length > 11) v = v.slice(0, 11);
+      if (v.length > 10) {
+        v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+      } else {
+        v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      }
+      telefoneInput.value = v.replace(/-$/, '');
+    });
+  }
+  // Pontos preview
+  const valorInput = document.getElementById('valor-input');
+  const ptsVal = document.getElementById('pts-val');
+  const produtoSelect = document.getElementById('produto-select');
+  const qtdInput = document.getElementById('qtd-input');
+  const estoqueHint = document.getElementById('estoque-hint');
+
+  function moedaBR(valor) {
+    return Number(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function parseValor(valor) {
+    let texto = String(valor || '').trim().replace(/[^\d,.-]/g, '');
+    if (!texto) return 0;
+    const ultimaVirgula = texto.lastIndexOf(',');
+    const ultimoPonto = texto.lastIndexOf('.');
+
+    if (ultimaVirgula >= 0 && ultimoPonto >= 0) {
+      const decimal = ultimaVirgula > ultimoPonto ? ',' : '.';
+      const milhar = decimal === ',' ? '.' : ',';
+      texto = texto.split(milhar).join('').replace(decimal, '.');
+    } else if (ultimaVirgula >= 0) {
+      texto = texto.replace(/\./g, '').replace(',', '.');
+    } else if (ultimoPonto >= 0) {
+      const partes = texto.split('.');
+      const final = partes[partes.length - 1] || '';
+      texto = final.length === 3 ? texto.replace(/\./g, '') : texto;
+    }
+
+    return parseFloat(texto) || 0;
+  }
+
+  function atualizarPontos() {
+    if (!valorInput || !ptsVal) return;
+    const v = parseValor(valorInput.value);
+    const pontos = Math.floor((Math.max(0, v) + 0.000001) / 89) * 20;
+      ptsVal.textContent = pontos > 0 ? `${pontos} pontos` : '0 pontos (mínimo R$ 89)';
+      ptsVal.style.color = pontos > 0 ? 'var(--gold)' : 'var(--white-dim)';
+  }
+
+  function atualizarValorProduto() {
+    const opt = produtoSelect.options[produtoSelect.selectedIndex];
+    const preco = parseFloat(opt?.dataset?.preco || '0') || 0;
+    const estoque = parseInt(opt?.dataset?.estoque || '0', 10) || 0;
+    const qtd = Math.max(1, parseInt(qtdInput.value || '1', 10));
+
+    if (estoque > 0) {
+      qtdInput.max = estoque;
+      estoqueHint.textContent = `Disponível: ${estoque} un.`;
+    } else {
+      qtdInput.removeAttribute('max');
+      estoqueHint.textContent = 'A baixa no estoque será automática.';
+    }
+
+    if (preco > 0) {
+      valorInput.value = moedaBR(preco * qtd);
+    }
+    atualizarPontos();
+  }
+
+  if (valorInput) valorInput.addEventListener('input', atualizarPontos);
+  if (produtoSelect) produtoSelect.addEventListener('change', atualizarValorProduto);
+  if (qtdInput) qtdInput.addEventListener('input', atualizarValorProduto);
+  atualizarPontos();
+</script>
+</body>
+</html>

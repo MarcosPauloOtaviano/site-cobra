@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Novo Produto — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --midnight:#08090b; --surface:#10151c; --card:#141a22;
+      --border:#273241; --green:#f5c518; --green-dim:#d7aa12;
+      --text:#f3f6f8; --muted:#8b9aad; --danger:#ef4444; --r:8px;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      background:var(--midnight); color:var(--text);
+      font-family:'DM Sans',sans-serif; min-height:100vh;
+      padding:2rem 1rem;
+    }
+    .page { max-width:580px; margin:0 auto; }
+    .back-link { color:var(--muted); text-decoration:none; font-size:.88rem; display:inline-flex; align-items:center; gap:.3rem; margin-bottom:1.5rem; }
+    .back-link:hover { color:var(--green); }
+    h1 { font-family:'Bebas Neue',cursive; font-size:2rem; letter-spacing:2px; margin-bottom:.25rem; }
+    h1 em { color:var(--green); font-style:normal; }
+    .sub { color:var(--muted); font-size:.9rem; margin-bottom:2rem; }
+
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:2rem; box-shadow:0 18px 50px rgba(0,0,0,.28); }
+
+    .field { margin-bottom:1.25rem; }
+    .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    label { display:block; font-size:.75rem; font-weight:700; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:.4rem; }
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select, textarea {
+      width:100%; padding:.75rem 1rem;
+      background:var(--surface); border:1px solid var(--border);
+      color:var(--text); border-radius:var(--r);
+      font-family:'DM Sans',sans-serif; font-size:.92rem;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline:none; border-color:var(--green-dim);
+      box-shadow:0 0 0 3px rgba(34,197,94,.1);
+    }
+    input[type="file"] { cursor:pointer; padding:.6rem; }
+
+    .file-preview {
+      display:none;
+      width:100%; aspect-ratio:16/9;
+      object-fit:cover; border-radius:var(--r);
+      border:1px solid var(--border); margin-top:.5rem;
+    }
+
+    .section-title {
+      font-size:.72rem; font-weight:700; color:var(--muted);
+      letter-spacing:1.5px; text-transform:uppercase;
+      border-bottom:1px solid var(--border);
+      padding-bottom:.5rem; margin:1.5rem 0 1.25rem;
+    }
+
+    .btn {
+      width:100%; padding:.85rem; border:none; border-radius:var(--r);
+      font-family:'DM Sans',sans-serif; font-weight:700; font-size:1rem;
+      cursor:pointer; transition:all .2s; margin-top:.5rem;
+    }
+    .btn-green { background:var(--green); color:#08090b; }
+    .btn-green:hover { background:#4ade80; box-shadow:0 0 20px rgba(34,197,94,.4); }
+
+    .flashes { margin-bottom:1.5rem; }
+    .flash { padding:.65rem 1rem; border-radius:var(--r); font-size:.88rem; font-weight:500; margin-bottom:.5rem; }
+    .flash-error { background:rgba(239,68,68,.1); border:1px solid var(--danger); color:var(--danger); }
+    .flash-success { background:rgba(34,197,94,.1); border:1px solid var(--green-dim); color:var(--green); }
+
+    select option { background:var(--surface); }
+    .hint { font-size:.75rem; color:var(--muted); margin-top:.3rem; }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+<div class="page">
+  <a href="/admin/painel" class="back-link">← Voltar ao painel</a>
+
+  <h1>NOVO <em>PRODUTO</em></h1>
+  <p class="sub">Preencha os dados do produto. Foto por upload ou por link.</p>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="flashes">
+        {% for cat, msg in msgs %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card">
+    {% set form = form if form is defined else {} %}
+    <form method="POST" action="/admin/cadastrar" enctype="multipart/form-data">
+
+      <div class="section-title">Identificação</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>ID do Produto</label>
+          <input type="text" name="id" placeholder="Ex: cb-cam-07" value="{{ form.get('id', '') }}">
+          <p class="hint">Deixe em branco para gerar automaticamente</p>
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <input type="text" name="categoria" required placeholder="Ex: camiseta, tenis" value="{{ form.get('categoria', '') }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Nome do Produto</label>
+        <input type="text" name="nome_produto" required placeholder="Ex: Camisa Portugal Versão Jogador" value="{{ form.get('nome_produto', '') }}">
+      </div>
+
+      <div class="section-title">Preço e Estoque</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Preço (R$)</label>
+          <input type="text" name="preco" required inputmode="decimal" placeholder="Ex: 89,90 ou 89.90" value="{{ form.get('preco', '') }}">
+        </div>
+        <div class="field">
+          <label>Estoque (Qtd)</label>
+          <input type="number" name="estoque" required placeholder="Ex: 5" min="0" value="{{ form.get('estoque', '') }}">
+        </div>
+      </div>
+
+      <div class="section-title">Detalhes</div>
+      <div class="field">
+        <label>Tamanhos Disponíveis</label>
+        <input type="text" name="tamanhos" placeholder="Ex: P, M, G, GG  ou  38, 39, 40, 41, 42" value="{{ form.get('tamanhos', '') }}">
+      </div>
+
+      <div class="field">
+        <label>Disponibilidade</label>
+        <select name="disponibilidade">
+          <option value="Pronta Entrega" {% if form.get('disponibilidade', 'Pronta Entrega') == 'Pronta Entrega' %}selected{% endif %}>✓ Pronta Entrega</option>
+          <option value="Sob Encomenda" {% if form.get('disponibilidade') == 'Sob Encomenda' %}selected{% endif %}>⏳ Sob Encomenda</option>
+        </select>
+      </div>
+
+      <div class="section-title">Foto do Produto</div>
+      <div class="field">
+        <label>Upload da Imagem (JPG, PNG, WEBP)</label>
+        <input type="file" name="imagem" accept="image/*" id="img-input" />
+        <img id="img-preview" class="file-preview" alt="Pré-visualização" />
+        <p class="hint">
+          Opcional no ambiente local. Na Vercel, use o link abaixo para a foto ficar permanente. Tamanho máximo local: 8 MB.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>Link da Imagem</label>
+        <input type="text" name="url_imagem" id="url-imagem" placeholder="https://..." value="{{ form.get('url_imagem', '') }}">
+        <p class="hint">Recomendado para produção. Também pode ficar em branco; a vitrine mostra uma imagem padrão.</p>
+      </div>
+
+      <button type="submit" class="btn btn-green">✓ Cadastrar Produto</button>
+    </form>
+    <a href="/admin/painel" style="display:block;text-align:center;margin-top:1rem;color:var(--muted);font-size:.88rem;text-decoration:none;">Cancelar</a>
+  </div>
+</div>
+
+<script>
+  const input = document.getElementById('img-input');
+  const preview = document.getElementById('img-preview');
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>

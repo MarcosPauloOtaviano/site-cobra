@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+
+credenciais.json
+*credenciais*.json
+*service-account*.json
+google-credentials*.json
+
+__pycache__/
+*.py[cod]
+
+.venv/
+venv/
+.vercel/
+
+.DS_Store

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meus Pontos — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --black:      #080808;
+      --deep:       #0d0d0d;
+      --surface:    #141414;
+      --card:       #1a1a1a;
+      --card-hover: #202020;
+      --border:     #2a2a2a;
+      --border-lit: #3a3a3a;
+      --yellow:     #f5c518;
+      --yellow-dim: #d4a812;
+      --yellow-glow:rgba(245,197,24,.18);
+      --yellow-soft:rgba(245,197,24,.08);
+      --white:      #f0f0f0;
+      --white-dim:  #a0a0a0;
+      --danger:     #ef4444;
+      --r: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(8,8,8,.95);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+      position: sticky;
+      top: 0; z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 1.7rem;
+      letter-spacing: 3px;
+      color: var(--white);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+    .logo .snake-icon {
+      background: var(--yellow);
+      color: var(--black);
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .logo .logo-em { color: var(--yellow); }
+
+    .btn-voltar {
+      color: var(--white-dim);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: .9rem;
+      transition: color .2s;
+    }
+    .btn-voltar:hover { color: var(--white); }
+
+    .main-container {
+      flex: 1;
+      padding: 4rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .search-box {
+      background: var(--deep);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--r) * 2);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    }
+    
+    .search-box h1 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2.5rem;
+      letter-spacing: 2px;
+      margin-bottom: .5rem;
+      color: var(--yellow);
+    }
+    .search-box p {
+      color: var(--white-dim);
+      font-size: .95rem;
+      margin-bottom: 2rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .input-group input {
+      background: var(--surface);
+      border: 1px solid var(--border-lit);
+      color: var(--white);
+      padding: 1rem;
+      border-radius: var(--r);
+      font-size: 1.1rem;
+      text-align: center;
+      letter-spacing: 2px;
+      outline: none;
+      transition: border-color .2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .input-group input:focus { border-color: var(--yellow); }
+    
+    .btn-buscar {
+      background: var(--yellow);
+      color: var(--black);
+      border: none;
+      padding: 1rem;
+      border-radius: var(--r);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background .2s, box-shadow .2s;
+    }
+    .btn-buscar:hover {
+      background: #ffe55a;
+      box-shadow: 0 0 20px rgba(245,197,24,.4);
+    }
+
+    /* ═══ RESULTADO ═══ */
+    .resultado-box {
+      background: var(--surface);
+      border: 1px solid var(--border-lit);
+      border-radius: calc(var(--r) * 2);
+      width: 100%;
+      max-width: 500px;
+      margin-top: 2rem;
+      padding: 2rem;
+      text-align: center;
+      animation: slideUp .4s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .nome-cliente {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: .5rem;
+    }
+    .pontos-destaque {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 4rem;
+      color: var(--yellow);
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(245,197,24,.3);
+      margin: 1rem 0;
+    }
+    .pontos-label {
+      color: var(--white-dim);
+      font-size: .9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    /* Barra de progresso */
+    .progress-wrap { margin-top: 2rem; text-align: left; }
+    .progress-header {
+      display: flex; justify-content: space-between;
+      font-size: .85rem; color: var(--white-dim); margin-bottom: .5rem;
+    }
+    .progress-bar {
+      background: var(--black);
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .progress-fill {
+      background: var(--yellow);
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1s ease-out;
+      position: relative;
+    }
+    .progress-fill::after {
+      content: ''; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+      animation: shine 2s infinite;
+    }
+    @keyframes shine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+    .meta-aviso {
+      font-size: .8rem;
+      color: var(--yellow-dim);
+      margin-top: .75rem;
+      display: block;
+      text-align: center;
+    }
+
+    /* ═══ VENDAS RECENTES ═══ */
+    .vendas-list {
+      margin-top: 2rem;
+      text-align: left;
+    }
+    .vendas-list h3 {
+      font-size: 1rem; color: var(--white); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: .5rem;
+    }
+    .venda-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .75rem 0; border-bottom: 1px dashed var(--border);
+    }
+    .venda-item:last-child { border: none; }
+    .venda-data { font-size: .8rem; color: var(--white-dim); }
+    .venda-valor { font-weight: 600; color: var(--white); font-size: .9rem; }
+    .venda-pts { color: var(--yellow); font-size: .8rem; font-weight: 700; background: var(--yellow-soft); padding: .2rem .5rem; border-radius: 4px; }
+
+    /* ═══ COMO FUNCIONA ═══ */
+    .como-funciona {
+      margin-top: 4rem;
+      width: 100%;
+      max-width: 800px;
+    }
+    .como-funciona h2 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      text-align: center;
+      margin-bottom: 2rem;
+      color: var(--white);
+    }
+    .passos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+    .passo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: var(--r);
+      position: relative;
+    }
+    .passo-num {
+      position: absolute; top: -15px; left: -15px;
+      background: var(--yellow); color: var(--black);
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', cursive; font-size: 1.2rem;
+      border: 4px solid var(--black);
+    }
+    .passo strong { display: block; color: var(--yellow); margin-bottom: .5rem; font-size: 1.1rem; }
+    .passo span { color: var(--white-dim); font-size: .9rem; line-height: 1.5; }
+
+    /* Flashes */
+    .flashes { width: 100%; max-width: 500px; margin-bottom: 1rem; }
+    .flash { padding: 1rem; border-radius: var(--r); font-size: .9rem; font-weight: 500; text-align: center; }
+    .flash-error { background: rgba(239,68,68,.15); border: 1px solid var(--danger); color: #fca5a5; }
+
+    footer {
+      background: var(--deep);
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--white-dim);
+      font-size: .85rem;
+      margin-top: auto;
+    }
+    footer strong { color: var(--yellow); }
+    footer a { color: var(--white-dim); text-decoration: none; transition: color .2s; }
+    footer a:hover { color: var(--yellow); }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <div class="snake-icon">🐍</div>
+    OS <span class="logo-em">&nbsp;COBRA</span>&nbsp;DA BOLA
+  </a>
+  <a href="/" class="btn-voltar">← Voltar à Loja</a>
+</header>
+
+<div class="main-container">
+  
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="flashes">
+        {% for cat, msg in msgs %}
+          <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="search-box">
+    <h1>MEUS PONTOS</h1>
+    <p>Acompanhe seu progresso e resgate seus descontos.</p>
+    <form method="POST" action="/meus-pontos">
+      <div class="input-group">
+        <input type="text" name="telefone" id="telefone-input" placeholder="Digite seu WhatsApp com DDD" maxlength="15" required value="{{ telefone_buscado }}">
+        <button type="submit" class="btn-buscar">Consultar Saldo ➔</button>
+      </div>
+    </form>
+  </div>
+
+  {% if resultado %}
+    <div class="resultado-box">
+      <div class="nome-cliente">Olá, {{ resultado.nome or "Cliente" }}!</div>
+      <div class="pontos-label">Seu Saldo Atual</div>
+      <div class="pontos-destaque">{{ resultado.total_pontos }} pts</div>
+      
+      {% set pts = resultado.total_pontos | int %}
+      {% set meta = 300 %}
+      {% set perc = (pts / meta * 100) | round %}
+      {% if perc > 100 %}{% set perc = 100 %}{% endif %}
+
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span>Progresso</span>
+          <span>{{ pts }} / {{ meta }} pts</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ perc }}%;"></div>
+        </div>
+        {% if pts >= meta %}
+          <span class="meta-aviso" style="color: #4ade80;">🎉 Parabéns! Você já pode resgatar seus 40% de desconto!</span>
+        {% else %}
+          <span class="meta-aviso">Faltam {{ meta - pts }} pontos para liberar 40% OFF!</span>
+        {% endif %}
+      </div>
+
+      {% if vendas %}
+        <div class="vendas-list">
+          <h3>Últimas Compras</h3>
+          {% for v in vendas|reverse %}
+            <div class="venda-item">
+              <div class="venda-data">{{ v.data.split(' ')[0] if v.data else '' }}</div>
+              {% set valor_venda = v.valor|string %}
+              <div class="venda-valor">{{ valor_venda if 'R$' in valor_venda else 'R$ ' ~ valor_venda }}</div>
+              <div class="venda-pts">+{{ v.pontos }} pts</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="como-funciona">
+    <h2>COMO FUNCIONA?</h2>
+    <div class="passos">
+      <div class="passo">
+        <div class="passo-num">1</div>
+        <strong>Compre pelo WhatsApp</strong>
+        <span>Escolha o produto na vitrine e peça pelo WhatsApp. Informe seu celular para acumular pontos com segurança.</span>
+      </div>
+      <div class="passo">
+        <div class="passo-num">2</div>
+        <strong>Ganhe por Faixa</strong>
+        <span>A cada R$ 89 em compras, você soma 20 pontos. R$ 178 viram 40 pontos.</span>
+      </div>
+      <div class="passo">
+        <div class="passo-num">3</div>
+        <strong>40% de Desconto</strong>
+        <span>Ao acumular 300 pontos, você ganha 40% de desconto para usar na sua próxima compra!</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>© 2025 <strong>Os Cobra da Bola</strong> — Guaxupé, MG</p>
+</footer>
+
+<script>
+  const telefoneInput = document.getElementById('telefone-input');
+  if (telefoneInput) {
+    telefoneInput.addEventListener('input', () => {
+      let v = telefoneInput.value.replace(/\D/g, '');
+      if (v.startsWith('55') && v.length > 11) v = v.slice(2);
+      if (v.length > 11) v = v.slice(0, 11);
+      if (v.length > 10) {
+        v = v.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+      } else {
+        v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      }
+      telefoneInput.value = v.replace(/-$/, '');
+    });
+  }
+</script>
+
+</body>
+</html>
