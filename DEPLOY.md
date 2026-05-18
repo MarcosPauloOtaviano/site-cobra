@@ -14,7 +14,7 @@ Configure no painel da Vercel:
 
 - `WHATSAPP_NUM`: número usado no botão de compra, no formato internacional sem `+`.
 - `SHEETS_CACHE_SECONDS`: cache curto da vitrine. Padrão: `30`.
-- `ASSET_VERSION`: versão de cache do CSS. Padrão: `attack11`.
+- `ASSET_VERSION`: versão de cache do CSS. Padrão: `attack12`.
 
 ## Imagens de produto
 

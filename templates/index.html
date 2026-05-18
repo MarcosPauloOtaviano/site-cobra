@@ -82,6 +82,11 @@
     </div>
   </aside>
 
+  <button type="button" class="floating-cart-button" id="floatingCartButton" data-open-cart aria-label="Abrir sacola">
+    <span>Sacola</span>
+    <strong id="floatingCartBadge">0</strong>
+  </button>
+
   <!-- Modal de Dados do Cliente -->
   <div class="checkout-modal-overlay" id="checkoutModal">
     <div class="checkout-modal">
@@ -134,6 +139,23 @@
       <strong id="cartBadge">0</strong>
     </button>
   </header>
+
+  <div class="brand-strip" aria-label="Letreiro de destaques da loja">
+    <div class="brand-strip-track">
+      <span>Veste quem tem a senha</span>
+      <span>Pronta entrega selecionada</span>
+      <span>Compra pelo WhatsApp</span>
+      <span>20 pontos a cada R$ 89</span>
+      <span>300 pontos viram desconto</span>
+      <span>Novidades toda semana</span>
+      <span>Veste quem tem a senha</span>
+      <span>Pronta entrega selecionada</span>
+      <span>Compra pelo WhatsApp</span>
+      <span>20 pontos a cada R$ 89</span>
+      <span>300 pontos viram desconto</span>
+      <span>Novidades toda semana</span>
+    </div>
+  </div>
 
   <main>
     <section class="hero-section">
@@ -267,23 +289,6 @@
         </div>
       {% endif %}
     </section>
-
-    <div class="brand-strip" aria-label="Letreiro de destaques da loja">
-      <div class="brand-strip-track">
-        <span>Veste quem tem a senha</span>
-        <span>Pronta entrega selecionada</span>
-        <span>Compra pelo WhatsApp</span>
-        <span>20 pontos a cada R$ 89</span>
-        <span>300 pontos viram desconto</span>
-        <span>Novidades toda semana</span>
-        <span>Veste quem tem a senha</span>
-        <span>Pronta entrega selecionada</span>
-        <span>Compra pelo WhatsApp</span>
-        <span>20 pontos a cada R$ 89</span>
-        <span>300 pontos viram desconto</span>
-        <span>Novidades toda semana</span>
-      </div>
-    </div>
 
     <section class="loyalty-section" id="clube">
       <div class="loyalty-copy">
@@ -583,6 +588,8 @@
       const total = cart.reduce((sum, item) => sum + item.preco * item.qty, 0);
       const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
       const badge = document.getElementById('cartBadge');
+      const floatingCart = document.getElementById('floatingCartButton');
+      const floatingBadge = document.getElementById('floatingCartBadge');
       const totalEl = document.getElementById('drawerTotal');
       const countEl = document.getElementById('totalItemsCount');
       const checkout = document.getElementById('btnCheckout');
@@ -591,6 +598,14 @@
       if (badge) {
         badge.textContent = totalQty;
         badge.classList.toggle('has-items', totalQty > 0);
+      }
+      if (floatingBadge) floatingBadge.textContent = totalQty;
+      if (floatingCart) {
+        floatingCart.classList.toggle('is-visible', totalQty > 0);
+        floatingCart.setAttribute(
+          'aria-label',
+          totalQty > 0 ? `Abrir sacola com ${totalQty} ${totalQty === 1 ? 'item' : 'itens'}` : 'Abrir sacola'
+        );
       }
       if (totalEl) totalEl.textContent = `R$ ${fmt(total)}`;
       if (countEl) {

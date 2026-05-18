@@ -2151,6 +2151,78 @@ body {
   }
 }
 
+/* Floating cart access: appears only when the bag has items. */
+.lookbook-page .floating-cart-button {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 78;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  min-width: 136px;
+  min-height: 56px;
+  border: 1px solid rgba(255, 233, 120, .78);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, var(--cobra-yellow), var(--cobra-yellow-hot));
+  color: var(--cobra-black);
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, .46),
+    0 0 30px rgba(255, 210, 26, .30);
+  font-family: "Montserrat", Arial, sans-serif;
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px) scale(.96);
+  transition: opacity .22s ease, transform .22s ease, box-shadow .22s ease;
+}
+
+.lookbook-page .floating-cart-button.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.lookbook-page.cart-is-open .floating-cart-button {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px) scale(.96);
+}
+
+.lookbook-page .floating-cart-button:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 22px 54px rgba(0, 0, 0, .50),
+    0 0 38px rgba(255, 210, 26, .38);
+}
+
+.lookbook-page .floating-cart-button strong {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--cobra-black);
+  color: var(--cobra-yellow);
+  font-size: .82rem;
+  line-height: 1;
+}
+
+@media (max-width: 620px) {
+  .lookbook-page .floating-cart-button {
+    right: max(.9rem, env(safe-area-inset-right));
+    bottom: max(.9rem, env(safe-area-inset-bottom));
+    min-width: 126px;
+    min-height: 52px;
+    padding: .65rem .72rem .65rem .95rem;
+  }
+}
+
 /* Cobra Attack: global aggressive identity */
 :root {
   --cobra-black: #050505;
