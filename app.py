@@ -205,7 +205,7 @@ def aplicar_headers_basicos(response):
 def variaveis_globais():
     return {
         'whatsapp_num': os.getenv('WHATSAPP_NUM', '5535999014589'),
-        'cache_bust': os.getenv('ASSET_VERSION', 'attack10'),
+        'cache_bust': os.getenv('ASSET_VERSION', 'attack11'),
         'ambiente_vercel': AMBIENTE_VERCEL,
     }
 
