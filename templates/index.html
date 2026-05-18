@@ -8,6 +8,41 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}" />
+  
+  <style>
+    /* Estilos do Modal de Checkout (Formulário do Zap) */
+    .checkout-modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+    .checkout-modal-overlay.is-open {
+      opacity: 1; pointer-events: auto;
+    }
+    .checkout-modal {
+      background: #111; color: #fff; padding: 24px; border-radius: 8px;
+      width: 90%; max-width: 400px; font-family: 'Inter', sans-serif;
+      border: 1px solid #333;
+      transform: translateY(20px); transition: transform 0.2s ease;
+    }
+    .checkout-modal-overlay.is-open .checkout-modal {
+      transform: translateY(0);
+    }
+    .checkout-modal h3 { margin: 0 0 8px; font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; }
+    .checkout-modal p { margin: 0 0 20px; font-size: 14px; color: #aaa; }
+    .input-group { margin-bottom: 16px; display: flex; flex-direction: column; }
+    .input-group label { font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; color: #888; }
+    .input-group input { padding: 14px; background: #000; border: 1px solid #333; color: #fff; border-radius: 4px; font-size: 16px; }
+    .input-group input:focus { outline: none; border-color: #fff; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .modal-actions button { flex: 1; padding: 14px; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: opacity 0.2s;}
+    .modal-actions button:active { opacity: 0.8; }
+    .btn-cancel { background: #333; color: #fff; }
+    .btn-confirm { background: #fff; color: #000; }
+  </style>
 </head>
 <body class="lookbook-page">
   {% with msgs = get_flashed_messages(with_categories=true) %}
@@ -46,6 +81,29 @@
       <button type="button" class="clear-cart-button" data-clear-cart>Limpar sacola</button>
     </div>
   </aside>
+
+  <!-- Modal de Dados do Cliente -->
+  <div class="checkout-modal-overlay" id="checkoutModal">
+    <div class="checkout-modal">
+      <h3>Seus Dados</h3>
+      <p>Preencha para enviarmos junto com o seu pedido.</p>
+      
+      <div class="input-group">
+        <label for="clienteNome">Nome *</label>
+        <input type="text" id="clienteNome" placeholder="Seu nome" autocomplete="name" />
+      </div>
+      
+      <div class="input-group">
+        <label for="clienteTelefone">Telefone (opcional para pontos)</label>
+        <input type="tel" id="clienteTelefone" placeholder="(XX) 9XXXX-XXXX" autocomplete="tel" />
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="fecharModalCheckout()">Cancelar</button>
+        <button type="button" class="btn-confirm" onclick="enviarPedidoZap()">Enviar Pedido</button>
+      </div>
+    </div>
+  </div>
 
   <header class="site-header">
     <a href="/" class="brand-lockup" aria-label="Os Cobra da Bola">
@@ -581,34 +639,40 @@
       document.body.classList.toggle('cart-is-open', open);
     }
 
-    function finalizarPedido() {
+    function abrirModalCheckout() {
+      const modal = document.getElementById('checkoutModal');
+      if (modal) {
+        modal.classList.add('is-open');
+        document.getElementById('clienteNome').focus();
+      }
+    }
+
+    function fecharModalCheckout() {
+      const modal = document.getElementById('checkoutModal');
+      if (modal) {
+        modal.classList.remove('is-open');
+      }
+    }
+
+    function enviarPedidoZap() {
       const cart = carregarCarrinho();
       if (cart.length === 0) return;
 
-      // 1. Pede o nome obrigatoriamente
-      const nomeCliente = prompt('Qual o seu nome?');
-      if (!nomeCliente || nomeCliente.trim() === '') {
-        showToast('O nome é obrigatório para enviar o pedido.', 'error');
-        return; // Impede de continuar se cancelar ou deixar em branco
-      }
-
-      // 2. Pede se quer colocar telefone
-      let telefoneCliente = 'Não informado';
-      const querPontos = confirm('Deseja adicionar telefone e garantir seus pontos?');
+      const nomeInput = document.getElementById('clienteNome');
+      const telInput = document.getElementById('clienteTelefone');
       
-      // 3. Se ele disser OK, abre a janela de digitar o telefone
-      if (querPontos) {
-        const telInput = prompt('Digite seu telefone com DDD:');
-        if (telInput && telInput.trim() !== '') {
-          telefoneCliente = telInput.trim();
-        }
+      if (!nomeInput.value.trim()) {
+        showToast('Por favor, informe seu nome antes de enviar.', 'error');
+        nomeInput.focus();
+        return;
       }
-
-      // Prepara e envia a mensagem para o Zap
+      
+      const nomeCliente = nomeInput.value.trim();
+      const telefoneCliente = telInput.value.trim() || 'Não informado';
       const total = cart.reduce((sum, item) => sum + item.preco * item.qty, 0);
 
       let message = '*⚽️ PEDIDO Cobra da bola🐍*\n\n';
-      message += `👤 *Cliente:* ${nomeCliente.trim()}\n`;
+      message += `👤 *Cliente:* ${nomeCliente}\n`;
       message += `📍 *telefone:* ${telefoneCliente}\n`;
       message += `💰 *Total:* R$ ${fmt(total)}\n`;
       message += '*🛍️ ITENS DO PEDIDO:*\n';
@@ -624,7 +688,13 @@
       salvarCarrinho([]);
       atualizarUI();
       syncAllButtons();
+      fecharModalCheckout();
       setCartOpen(false);
+      
+      // Limpa os campos para o próximo uso
+      nomeInput.value = '';
+      telInput.value = '';
+      
       showToast('Pedido enviado para o WhatsApp.');
     }
 
@@ -668,7 +738,13 @@
       }
 
       if (event.target.closest('[data-checkout]')) {
-        finalizarPedido();
+        abrirModalCheckout();
+        return;
+      }
+      
+      // Se clicar fora do modalzinho, fecha ele
+      if (event.target.id === 'checkoutModal') {
+        fecharModalCheckout();
         return;
       }
 
@@ -688,7 +764,10 @@
     });
 
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') setCartOpen(false);
+      if (event.key === 'Escape') {
+        setCartOpen(false);
+        fecharModalCheckout();
+      }
     });
 
     document.addEventListener('error', event => {
