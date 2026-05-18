@@ -585,16 +585,19 @@
       const cart = carregarCarrinho();
       if (cart.length === 0) return;
 
-      let message = '*OS COBRA DA BOLA | Novo pedido*\\n\\n';
-      cart.forEach(item => {
-        message += `${item.qty}x ${item.nome}`;
-        if (item.tamanho !== 'UNICO') message += ` (Tam: ${item.tamanho})`;
-        message += `\\nR$ ${fmt(item.preco)} cada | Subtotal: R$ ${fmt(item.preco * item.qty)}\\n\\n`;
-      });
-
       const total = cart.reduce((sum, item) => sum + item.preco * item.qty, 0);
-      message += `Total: R$ ${fmt(total)}\\n\\n`;
-      message += 'Vou informar meu WhatsApp para acumular pontos.';
+
+      let message = '*⚽️ PEDIDO Cobra da bola🐍*\n\n';
+      message += '👤 *Cliente:* \n';
+      message += '📍 *telefone:*\n';
+      message += `💰 *Total:* R$ ${fmt(total)}\n`;
+      message += '*🛍️ ITENS DO PEDIDO:*\n';
+
+      cart.forEach(item => {
+        message += `▪️ ${item.qty}x ${item.nome}`;
+        if (item.tamanho !== 'UNICO') message += ` (Tam: ${item.tamanho})`;
+        message += ` - R$ ${fmt(item.preco * item.qty)}\n`;
+      });
 
       window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(message)}`, '_blank');
       salvarCarrinho([]);
