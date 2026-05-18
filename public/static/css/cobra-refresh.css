@@ -1823,6 +1823,266 @@ body {
   }
 }
 
+/* Desktop-like phone/tablet storefront: compact, premium, not oversized. */
+@media (max-width: 1024px) {
+  .lookbook-page .site-header {
+    min-height: 72px !important;
+  }
+
+  .lookbook-page .brand-strip {
+    margin: 0 !important;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1.15rem !important;
+  }
+
+  .lookbook-page .product-card,
+  .lookbook-page .product-card-featured {
+    grid-column: span 1 !important;
+  }
+
+  .lookbook-page .product-media,
+  .lookbook-page .product-card-featured .product-media {
+    aspect-ratio: 4 / 5 !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .lookbook-page .site-header {
+    padding: .7rem .85rem .72rem !important;
+  }
+
+  .lookbook-page .main-nav {
+    border-radius: 999px !important;
+    gap: .18rem !important;
+    padding: .26rem !important;
+  }
+
+  .lookbook-page .main-nav a {
+    min-height: 38px !important;
+    border-radius: 999px !important;
+    font-size: .55rem !important;
+    line-height: 1.15 !important;
+    padding: .42rem .18rem !important;
+    word-break: normal;
+  }
+
+  .lookbook-page .nav-full {
+    display: none !important;
+  }
+
+  .lookbook-page .nav-short {
+    display: inline !important;
+  }
+
+  .lookbook-page .brand-strip-track span {
+    min-height: 44px !important;
+    padding: 0 1.55rem !important;
+    font-size: .62rem !important;
+  }
+
+  .lookbook-page .hero-section {
+    min-height: auto !important;
+    padding: 2rem .85rem 2.35rem !important;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    max-width: 100% !important;
+    font-size: clamp(2.55rem, 13vw, 3.35rem) !important;
+    line-height: .86 !important;
+  }
+
+  .lookbook-page .hero-copy p {
+    max-width: 100% !important;
+    font-size: .9rem !important;
+    line-height: 1.58 !important;
+    margin-top: 1rem !important;
+  }
+
+  .lookbook-page .hero-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .55rem !important;
+    margin-top: 1.2rem !important;
+  }
+
+  .lookbook-page .primary-link,
+  .lookbook-page .secondary-link {
+    min-height: 42px !important;
+    border-radius: 10px !important;
+    font-size: .64rem !important;
+    padding: .72rem .35rem !important;
+  }
+
+  .lookbook-page .collection-section {
+    padding: 2.65rem .75rem 3rem !important;
+  }
+
+  .lookbook-page .collection-heading {
+    margin-bottom: 1.25rem !important;
+  }
+
+  .lookbook-page .collection-heading h2,
+  .lookbook-page .loyalty-copy h2 {
+    max-width: 100% !important;
+    font-size: clamp(2.45rem, 12vw, 3.15rem) !important;
+    line-height: .9 !important;
+  }
+
+  .lookbook-page .collection-heading p,
+  .lookbook-page .loyalty-copy p {
+    font-size: .86rem !important;
+    line-height: 1.55 !important;
+  }
+
+  .lookbook-page .filter-bar {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: .38rem !important;
+  }
+
+  .lookbook-page .filter-chip {
+    min-height: 36px !important;
+    border-radius: 999px !important;
+    font-size: .52rem !important;
+    line-height: 1.1 !important;
+    padding: .48rem .25rem !important;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .85rem !important;
+  }
+
+  .lookbook-page .product-card,
+  .lookbook-page .product-card-featured {
+    gap: .48rem !important;
+    padding: .42rem !important;
+    border-radius: 14px !important;
+  }
+
+  .lookbook-page .product-media,
+  .lookbook-page .product-card-featured .product-media {
+    border-radius: 10px !important;
+  }
+
+  .lookbook-page .product-badges {
+    top: .45rem !important;
+    left: .45rem !important;
+    right: .45rem !important;
+  }
+
+  .lookbook-page .product-badges span {
+    font-size: .46rem !important;
+    padding: .36rem .42rem !important;
+  }
+
+  .lookbook-page .price-reveal {
+    left: .45rem !important;
+    right: .45rem !important;
+    bottom: .45rem !important;
+    min-height: 38px !important;
+    padding: .4rem .48rem !important;
+    border-radius: 9px !important;
+  }
+
+  .lookbook-page .price-reveal span {
+    font-size: .78rem !important;
+  }
+
+  .lookbook-page .product-info {
+    gap: .48rem !important;
+    padding: .15rem .08rem .05rem !important;
+  }
+
+  .lookbook-page .product-topline {
+    grid-template-columns: 1fr auto !important;
+    gap: .35rem !important;
+  }
+
+  .lookbook-page .product-topline span,
+  .lookbook-page .product-topline small,
+  .lookbook-page .single-size,
+  .lookbook-page .size-group > span {
+    font-size: .52rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .lookbook-page .product-topline small {
+    white-space: normal !important;
+    text-align: right;
+  }
+
+  .lookbook-page .product-title-row {
+    display: grid !important;
+    gap: .22rem !important;
+  }
+
+  .lookbook-page .product-title-row h3 {
+    font-size: .82rem !important;
+    line-height: 1.22 !important;
+  }
+
+  .lookbook-page .product-title-row strong {
+    font-size: .8rem !important;
+  }
+
+  .lookbook-page .size-options {
+    grid-template-columns: repeat(auto-fit, minmax(34px, 1fr)) !important;
+    gap: .3rem !important;
+  }
+
+  .lookbook-page .size-option {
+    min-width: 0 !important;
+    min-height: 32px !important;
+    border-radius: 8px !important;
+    font-size: .66rem !important;
+  }
+
+  .lookbook-page .add-to-bag-button {
+    min-height: 38px !important;
+    border-radius: 9px !important;
+    font-size: .54rem !important;
+    padding: .58rem .25rem !important;
+  }
+
+  .lookbook-page .loyalty-section {
+    padding: 2.8rem .85rem !important;
+  }
+
+  .lookbook-page .loyalty-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: .5rem !important;
+  }
+
+  .lookbook-page .loyalty-cards article {
+    min-height: 92px !important;
+    padding: .72rem !important;
+  }
+
+  .lookbook-page .loyalty-cards strong {
+    font-size: 1.25rem !important;
+  }
+
+  .lookbook-page .loyalty-cards span {
+    font-size: .54rem !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .lookbook-page .filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lookbook-page .product-grid {
+    gap: .68rem !important;
+  }
+
+  .lookbook-page .add-to-bag-button {
+    font-size: .5rem !important;
+  }
+}
+
 /* Mobile finish: tuned for the phone viewport as a first-class storefront. */
 .lookbook-page .nav-short {
   display: none;
@@ -3443,5 +3703,260 @@ body {
   body:not(.lookbook-page) .panel {
     max-width: 100%;
     overflow-x: auto;
+  }
+}
+
+/* Final desktop-like storefront override for phone and tablet. */
+@media (max-width: 1024px) {
+  .lookbook-page .brand-strip {
+    margin: 0 !important;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1.15rem !important;
+  }
+
+  .lookbook-page .product-card,
+  .lookbook-page .product-card-featured {
+    grid-column: span 1 !important;
+  }
+
+  .lookbook-page .product-media,
+  .lookbook-page .product-card-featured .product-media {
+    aspect-ratio: 4 / 5 !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .lookbook-page .site-header {
+    padding: .7rem .85rem .72rem !important;
+  }
+
+  .lookbook-page .main-nav {
+    border-radius: 999px !important;
+    gap: .18rem !important;
+    padding: .26rem !important;
+  }
+
+  .lookbook-page .main-nav a {
+    min-height: 38px !important;
+    border-radius: 999px !important;
+    font-size: .55rem !important;
+    line-height: 1.15 !important;
+    padding: .42rem .18rem !important;
+  }
+
+  .lookbook-page .nav-full {
+    display: none !important;
+  }
+
+  .lookbook-page .nav-short {
+    display: inline !important;
+  }
+
+  .lookbook-page .brand-strip-track span {
+    min-height: 44px !important;
+    padding: 0 1.55rem !important;
+    font-size: .62rem !important;
+  }
+
+  .lookbook-page .hero-section {
+    min-height: auto !important;
+    padding: 2rem .85rem 2.35rem !important;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    max-width: 100% !important;
+    font-size: clamp(2.55rem, 13vw, 3.35rem) !important;
+    line-height: .86 !important;
+  }
+
+  .lookbook-page .hero-copy p {
+    max-width: 100% !important;
+    font-size: .9rem !important;
+    line-height: 1.58 !important;
+    margin-top: 1rem !important;
+  }
+
+  .lookbook-page .hero-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .55rem !important;
+    margin-top: 1.2rem !important;
+  }
+
+  .lookbook-page .primary-link,
+  .lookbook-page .secondary-link {
+    min-height: 42px !important;
+    border-radius: 10px !important;
+    font-size: .64rem !important;
+    padding: .72rem .35rem !important;
+  }
+
+  .lookbook-page .collection-section {
+    padding: 2.65rem .75rem 3rem !important;
+  }
+
+  .lookbook-page .collection-heading {
+    margin-bottom: 1.25rem !important;
+  }
+
+  .lookbook-page .collection-heading h2,
+  .lookbook-page .loyalty-copy h2 {
+    max-width: 100% !important;
+    font-size: clamp(2.45rem, 12vw, 3.15rem) !important;
+    line-height: .9 !important;
+  }
+
+  .lookbook-page .collection-heading p,
+  .lookbook-page .loyalty-copy p {
+    font-size: .86rem !important;
+    line-height: 1.55 !important;
+  }
+
+  .lookbook-page .filter-bar {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: .38rem !important;
+  }
+
+  .lookbook-page .filter-chip {
+    min-height: 36px !important;
+    border-radius: 999px !important;
+    font-size: .52rem !important;
+    line-height: 1.1 !important;
+    padding: .48rem .25rem !important;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .85rem !important;
+  }
+
+  .lookbook-page .product-card,
+  .lookbook-page .product-card-featured {
+    gap: .48rem !important;
+    padding: .42rem !important;
+    border-radius: 14px !important;
+  }
+
+  .lookbook-page .product-media,
+  .lookbook-page .product-card-featured .product-media {
+    border-radius: 10px !important;
+  }
+
+  .lookbook-page .product-badges {
+    top: .45rem !important;
+    left: .45rem !important;
+    right: .45rem !important;
+  }
+
+  .lookbook-page .product-badges span {
+    font-size: .46rem !important;
+    padding: .36rem .42rem !important;
+  }
+
+  .lookbook-page .price-reveal {
+    left: .45rem !important;
+    right: .45rem !important;
+    bottom: .45rem !important;
+    min-height: 38px !important;
+    padding: .4rem .48rem !important;
+    border-radius: 9px !important;
+  }
+
+  .lookbook-page .price-reveal span {
+    font-size: .78rem !important;
+  }
+
+  .lookbook-page .product-info {
+    gap: .48rem !important;
+    padding: .15rem .08rem .05rem !important;
+  }
+
+  .lookbook-page .product-topline {
+    grid-template-columns: 1fr auto !important;
+    gap: .35rem !important;
+  }
+
+  .lookbook-page .product-topline span,
+  .lookbook-page .product-topline small,
+  .lookbook-page .single-size,
+  .lookbook-page .size-group > span {
+    font-size: .52rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .lookbook-page .product-topline small {
+    white-space: normal !important;
+    text-align: right;
+  }
+
+  .lookbook-page .product-title-row {
+    display: grid !important;
+    gap: .22rem !important;
+  }
+
+  .lookbook-page .product-title-row h3 {
+    font-size: .82rem !important;
+    line-height: 1.22 !important;
+  }
+
+  .lookbook-page .product-title-row strong {
+    font-size: .8rem !important;
+  }
+
+  .lookbook-page .size-options {
+    grid-template-columns: repeat(auto-fit, minmax(34px, 1fr)) !important;
+    gap: .3rem !important;
+  }
+
+  .lookbook-page .size-option {
+    min-width: 0 !important;
+    min-height: 32px !important;
+    border-radius: 8px !important;
+    font-size: .66rem !important;
+  }
+
+  .lookbook-page .add-to-bag-button {
+    min-height: 38px !important;
+    border-radius: 9px !important;
+    font-size: .54rem !important;
+    padding: .58rem .25rem !important;
+  }
+
+  .lookbook-page .loyalty-section {
+    padding: 2.8rem .85rem !important;
+  }
+
+  .lookbook-page .loyalty-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: .5rem !important;
+  }
+
+  .lookbook-page .loyalty-cards article {
+    min-height: 92px !important;
+    padding: .72rem !important;
+  }
+
+  .lookbook-page .loyalty-cards strong {
+    font-size: 1.25rem !important;
+  }
+
+  .lookbook-page .loyalty-cards span {
+    font-size: .54rem !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .lookbook-page .filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lookbook-page .product-grid {
+    gap: .68rem !important;
+  }
+
+  .lookbook-page .add-to-bag-button {
+    font-size: .5rem !important;
   }
 }
