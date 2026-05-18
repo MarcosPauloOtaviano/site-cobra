@@ -14,11 +14,11 @@ Configure no painel da Vercel:
 
 - `WHATSAPP_NUM`: número usado no botão de compra, no formato internacional sem `+`.
 - `SHEETS_CACHE_SECONDS`: cache curto da vitrine. Padrão: `30`.
-- `ASSET_VERSION`: versão de cache do CSS. Padrão: `attack9`.
+- `ASSET_VERSION`: versão de cache do CSS. Padrão: `attack10`.
 
 ## Imagens de produto
 
-Na Vercel, o filesystem da função não é persistente. Por isso, em produção use o campo **Link da Imagem** no cadastro/edição do produto. O upload local continua funcionando para desenvolvimento local.
+Na Vercel, o filesystem da função não é persistente. Por isso, o painel compacta a foto no navegador antes do envio e salva a imagem como data URL na planilha, dentro do limite do Google Sheets. Links externos continuam funcionando normalmente.
 
 Os arquivos em `public/static/` são servidos como assets públicos pela Vercel.
 

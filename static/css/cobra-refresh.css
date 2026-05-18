@@ -1505,6 +1505,324 @@ body.lookbook-page {
   }
 }
 
+/* Mobile polish pass: keep the desktop attitude without layout leaks. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.lookbook-page main,
+.lookbook-page section,
+.lookbook-page header,
+.lookbook-page footer {
+  max-width: 100vw;
+}
+
+.lookbook-page .hero-section {
+  display: flex !important;
+  min-height: clamp(480px, 64vh, 720px) !important;
+  align-items: center;
+  padding-top: clamp(3rem, 8vw, 5.2rem) !important;
+  padding-bottom: clamp(3rem, 8vw, 5.2rem) !important;
+  background:
+    radial-gradient(circle at 76% 18%, rgba(255, 210, 26, .20), transparent 23rem),
+    linear-gradient(115deg, rgba(18, 14, 7, .98) 0%, rgba(18, 14, 7, .95) 58%, rgba(36, 27, 8, .82) 58%),
+    repeating-linear-gradient(135deg, rgba(255, 210, 26, .12) 0 2px, transparent 2px 28px),
+    #151006 !important;
+}
+
+.lookbook-page .hero-copy {
+  width: min(820px, 100%);
+}
+
+.lookbook-page .hero-copy h1 {
+  max-width: 760px !important;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.lookbook-page .collection-section {
+  padding-top: clamp(3.8rem, 8vw, 6rem) !important;
+}
+
+.lookbook-page .collection-heading,
+.lookbook-page .product-card,
+.lookbook-page .product-info,
+.lookbook-page .product-title-row,
+.lookbook-page .loyalty-section,
+.lookbook-page .site-footer,
+.lookbook-page .cart-item {
+  min-width: 0;
+}
+
+.lookbook-page .product-title-row h3,
+.lookbook-page .cart-item-body strong,
+.lookbook-page .cart-item-body span,
+.lookbook-page .cart-item-body small {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .lookbook-page .site-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .75rem;
+    padding: .85rem 1rem !important;
+  }
+
+  .lookbook-page .brand-lockup {
+    min-width: 0;
+  }
+
+  .lookbook-page .bag-button {
+    position: static !important;
+    inset: auto !important;
+    width: auto;
+    min-width: 52px;
+    justify-self: end;
+    grid-column: 2;
+    margin: 0 !important;
+    transform: none !important;
+  }
+
+  .lookbook-page .main-nav {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+  }
+
+  .lookbook-page .main-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: .62rem .35rem;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .lookbook-page .hero-section {
+    min-height: auto !important;
+    padding: 3.1rem 1rem 3.4rem !important;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    width: 100%;
+    max-width: 100% !important;
+    font-size: clamp(3.7rem, 15vw, 6.2rem) !important;
+    line-height: .85 !important;
+  }
+
+  .lookbook-page .hero-copy p {
+    max-width: 34rem;
+  }
+
+  .lookbook-page .collection-heading {
+    display: grid !important;
+    gap: 1.25rem;
+  }
+
+  .lookbook-page .filter-bar {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1.6rem .95rem;
+  }
+
+  .lookbook-page .product-card,
+  .lookbook-page .product-card-featured {
+    grid-column: span 1 !important;
+  }
+
+  .lookbook-page .product-card-featured .product-media {
+    aspect-ratio: 4 / 5;
+  }
+
+  .lookbook-page .loyalty-section {
+    grid-template-columns: 1fr !important;
+    align-items: stretch;
+  }
+
+  .lookbook-page .loyalty-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .lookbook-page .brand-copy strong {
+    font-size: .8rem;
+  }
+
+  .lookbook-page .brand-copy small {
+    font-size: .58rem;
+  }
+
+  .lookbook-page .bag-button {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 2;
+    justify-self: end !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    padding: .5rem !important;
+  }
+
+  .lookbook-page .bag-button span {
+    display: none !important;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    font-size: clamp(3rem, 16vw, 4.2rem) !important;
+    line-height: .88 !important;
+  }
+
+  .lookbook-page .hero-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: .7rem;
+  }
+
+  .lookbook-page .primary-link,
+  .lookbook-page .secondary-link {
+    width: 100%;
+    min-width: 0;
+    padding-left: .65rem;
+    padding-right: .65rem;
+    text-align: center;
+  }
+
+  .lookbook-page .collection-section,
+  .lookbook-page .loyalty-section,
+  .lookbook-page .site-footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .lookbook-page .collection-heading h2,
+  .lookbook-page .loyalty-copy h2 {
+    font-size: clamp(2.8rem, 15vw, 4rem) !important;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1.85rem;
+  }
+
+  .lookbook-page .price-reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .lookbook-page .quick-buy-button {
+    display: none;
+  }
+
+  .lookbook-page .product-info {
+    padding: .9rem !important;
+  }
+
+  .lookbook-page .product-topline,
+  .lookbook-page .product-title-row {
+    display: grid !important;
+    gap: .35rem;
+  }
+
+  .lookbook-page .product-title-row strong {
+    white-space: normal;
+  }
+
+  .lookbook-page .loyalty-cards,
+  .lookbook-page .site-footer {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lookbook-page .cart-drawer {
+    width: 100dvw !important;
+    max-width: 100dvw;
+  }
+
+  .lookbook-page .cart-item {
+    grid-template-columns: 74px minmax(0, 1fr) !important;
+  }
+
+  .lookbook-page .cart-item-actions {
+    grid-column: 2;
+    grid-template-columns: 32px 32px 32px minmax(0, auto);
+    justify-self: start;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 430px) {
+  .lookbook-page .main-nav a {
+    font-size: .66rem;
+    padding-left: .2rem;
+    padding-right: .2rem;
+  }
+
+  .lookbook-page .hero-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 380px) {
+  .lookbook-page .main-nav a {
+    font-size: .68rem;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    font-size: clamp(2.7rem, 15vw, 3.4rem) !important;
+  }
+
+  .lookbook-page .hero-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  body:not(.lookbook-page),
+  body:not(.lookbook-page) .page,
+  body:not(.lookbook-page) .container,
+  body:not(.lookbook-page) .main-container {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  body:not(.lookbook-page) .admin-nav,
+  body:not(.lookbook-page) header {
+    width: 100%;
+    max-width: 100vw;
+    overflow: hidden;
+  }
+
+  body:not(.lookbook-page) .nav-links {
+    flex-wrap: wrap !important;
+    min-width: 0;
+  }
+
+  body:not(.lookbook-page) .card,
+  body:not(.lookbook-page) .box,
+  body:not(.lookbook-page) .search-box,
+  body:not(.lookbook-page) .resultado-box,
+  body:not(.lookbook-page) .table-wrap,
+  body:not(.lookbook-page) .panel,
+  body:not(.lookbook-page) .report-form {
+    max-width: 100%;
+  }
+
+  body:not(.lookbook-page) .table-wrap,
+  body:not(.lookbook-page) .panel {
+    overflow-x: auto;
+  }
+}
+
 /* Cobra Attack: global aggressive identity */
 :root {
   --cobra-black: #050505;
@@ -2473,5 +2791,257 @@ body:not(.lookbook-page) textarea {
     width: 100%;
     padding-left: .8rem;
     padding-right: .8rem;
+  }
+}
+
+/* Final responsive lock: this block intentionally sits last. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.lookbook-page main,
+.lookbook-page section,
+.lookbook-page header,
+.lookbook-page footer {
+  max-width: 100vw;
+}
+
+.lookbook-page .hero-section {
+  display: flex !important;
+  min-height: clamp(480px, 64vh, 720px) !important;
+  align-items: center;
+  padding-top: clamp(3rem, 8vw, 5.2rem) !important;
+  padding-bottom: clamp(3rem, 8vw, 5.2rem) !important;
+  background:
+    radial-gradient(circle at 76% 18%, rgba(255, 210, 26, .20), transparent 23rem),
+    linear-gradient(115deg, rgba(18, 14, 7, .98) 0%, rgba(18, 14, 7, .95) 58%, rgba(36, 27, 8, .82) 58%),
+    repeating-linear-gradient(135deg, rgba(255, 210, 26, .12) 0 2px, transparent 2px 28px),
+    #151006 !important;
+}
+
+.lookbook-page .hero-copy {
+  width: min(820px, 100%);
+  min-width: 0;
+}
+
+.lookbook-page .hero-copy h1 {
+  max-width: 760px !important;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.lookbook-page .collection-section {
+  padding-top: clamp(3.8rem, 8vw, 6rem) !important;
+}
+
+.lookbook-page .collection-heading,
+.lookbook-page .product-card,
+.lookbook-page .product-info,
+.lookbook-page .product-title-row,
+.lookbook-page .loyalty-section,
+.lookbook-page .site-footer,
+.lookbook-page .cart-item {
+  min-width: 0;
+}
+
+.lookbook-page .product-title-row h3,
+.lookbook-page .cart-item-body strong,
+.lookbook-page .cart-item-body span,
+.lookbook-page .cart-item-body small {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .lookbook-page .site-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 52px !important;
+    gap: .75rem;
+    padding: .85rem 1rem !important;
+    overflow: hidden;
+  }
+
+  .lookbook-page .bag-button {
+    position: relative !important;
+    inset: auto !important;
+    grid-column: 2;
+    justify-self: end !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    margin: 0 !important;
+    padding: .5rem !important;
+    transform: none !important;
+  }
+
+  .lookbook-page .bag-button span {
+    display: none !important;
+  }
+
+  .lookbook-page .main-nav {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    overflow: visible !important;
+  }
+
+  .lookbook-page .main-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    padding: .62rem .25rem;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .lookbook-page .hero-section {
+    min-height: auto !important;
+    padding: 3.1rem 1rem 3.4rem !important;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: clamp(3.7rem, 15vw, 6.2rem) !important;
+    line-height: .85 !important;
+  }
+
+  .lookbook-page .collection-heading {
+    display: grid !important;
+    gap: 1.25rem;
+  }
+
+  .lookbook-page .filter-bar {
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1.6rem .95rem;
+  }
+
+  .lookbook-page .product-card,
+  .lookbook-page .product-card-featured {
+    grid-column: span 1 !important;
+  }
+
+  .lookbook-page .product-card-featured .product-media {
+    aspect-ratio: 4 / 5;
+  }
+
+  .lookbook-page .loyalty-section {
+    grid-template-columns: 1fr !important;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 620px) {
+  .lookbook-page .main-nav a {
+    font-size: .66rem !important;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    font-size: clamp(3rem, 16vw, 4.2rem) !important;
+    line-height: .88 !important;
+  }
+
+  .lookbook-page .hero-actions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: .7rem;
+  }
+
+  .lookbook-page .primary-link,
+  .lookbook-page .secondary-link {
+    width: 100%;
+    min-width: 0;
+    padding-left: .65rem;
+    padding-right: .65rem;
+    text-align: center;
+  }
+
+  .lookbook-page .collection-section,
+  .lookbook-page .loyalty-section,
+  .lookbook-page .site-footer {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .lookbook-page .collection-heading h2,
+  .lookbook-page .loyalty-copy h2 {
+    font-size: clamp(2.8rem, 15vw, 4rem) !important;
+  }
+
+  .lookbook-page .product-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1.85rem;
+  }
+
+  .lookbook-page .price-reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .lookbook-page .quick-buy-button {
+    display: none;
+  }
+
+  .lookbook-page .product-info {
+    padding: .9rem !important;
+  }
+
+  .lookbook-page .product-topline,
+  .lookbook-page .product-title-row {
+    display: grid !important;
+    gap: .35rem;
+  }
+
+  .lookbook-page .product-title-row strong {
+    white-space: normal;
+  }
+
+  .lookbook-page .loyalty-cards,
+  .lookbook-page .site-footer {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lookbook-page .cart-drawer {
+    width: 100dvw !important;
+    max-width: 100dvw;
+  }
+}
+
+@media (max-width: 380px) {
+  .lookbook-page .main-nav a {
+    font-size: .62rem !important;
+  }
+
+  .lookbook-page .hero-copy h1 {
+    font-size: clamp(2.7rem, 15vw, 3.4rem) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body:not(.lookbook-page),
+  body:not(.lookbook-page) .page,
+  body:not(.lookbook-page) .container,
+  body:not(.lookbook-page) .main-container {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  body:not(.lookbook-page) .nav-links {
+    flex-wrap: wrap !important;
+    min-width: 0;
+  }
+
+  body:not(.lookbook-page) .table-wrap,
+  body:not(.lookbook-page) .panel {
+    max-width: 100%;
+    overflow-x: auto;
   }
 }

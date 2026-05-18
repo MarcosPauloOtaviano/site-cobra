@@ -10,6 +10,7 @@ MIGRAÇÃO DE SENHAS:
 import os
 import uuid
 import logging
+import re
 from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
@@ -51,6 +52,7 @@ app.secret_key = secret_key or 'cobra_secreta_mude_em_producao'
 DIRETORIO_ATUAL  = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER    = os.path.join(DIRETORIO_ATUAL, 'static', 'uploads')
 EXTENSOES_OK     = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+DATA_IMAGE_RE    = re.compile(r'^data:image/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=\s]+$')
 
 app.config['UPLOAD_FOLDER']      = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
@@ -77,11 +79,36 @@ def _salvar_imagem(img_file):
     if not _extensao_ok(img_file.filename):
         raise ValueError('Use uma imagem nos formatos PNG, JPG, JPEG, GIF ou WEBP.')
     if AMBIENTE_VERCEL:
-        raise ValueError('No deploy da Vercel, use o campo "Link da Imagem". Upload local não fica salvo de forma permanente.')
+        raise ValueError('No site online, aguarde a compactação da imagem antes de salvar. Se persistir, tente uma foto menor.')
 
     nome = f"{uuid.uuid4().hex[:8]}_{secure_filename(img_file.filename)}"
     img_file.save(os.path.join(app.config['UPLOAD_FOLDER'], nome))
     return f"/static/uploads/{nome}"
+
+
+def _imagem_data_url_form():
+    imagem_data = str(request.form.get('imagem_data', '') or '').strip()
+    if not imagem_data:
+        return ''
+    if len(imagem_data) > 50000:
+        raise ValueError('A imagem compactada ainda ficou pesada. Tente uma foto menor ou cole um link da imagem.')
+    if not DATA_IMAGE_RE.match(imagem_data):
+        raise ValueError('A imagem enviada pelo navegador não parece válida. Tente selecionar a foto novamente.')
+    return imagem_data.replace('\n', '').replace('\r', '')
+
+
+def _imagem_do_form(imagem_atual=''):
+    url_imagem = request.form.get('url_imagem', '').strip()
+    imagem_data = _imagem_data_url_form()
+    if imagem_data:
+        return imagem_data
+    if AMBIENTE_VERCEL and url_imagem:
+        return url_imagem
+    return (
+        _salvar_imagem(request.files.get('imagem'))
+        or url_imagem
+        or imagem_atual
+    )
 
 
 def _login_requerido():
@@ -178,7 +205,7 @@ def aplicar_headers_basicos(response):
 def variaveis_globais():
     return {
         'whatsapp_num': os.getenv('WHATSAPP_NUM', '5535999014589'),
-        'cache_bust': os.getenv('ASSET_VERSION', 'attack9'),
+        'cache_bust': os.getenv('ASSET_VERSION', 'attack10'),
         'ambiente_vercel': AMBIENTE_VERCEL,
     }
 
@@ -327,8 +354,7 @@ def cadastrar():
             plan = abrir_planilha()
             aba  = obter_aba_produtos(plan)
 
-            caminho_imagem = (_salvar_imagem(request.files.get('imagem'))
-                              or request.form.get('url_imagem', '').strip())
+            caminho_imagem = _imagem_do_form()
             p_id = p_id_digitado or gerar_id_produto(aba)
 
             if produto_id_existe(aba, p_id):
@@ -392,10 +418,8 @@ def editar(produto_id):
                 flash('Preço inválido.', 'error')
                 return render_template('editar.html', produto=produto)
 
-            caminho_imagem = (request.form.get('url_imagem', '').strip()
-                              or produto['imagem'])
             try:
-                caminho_imagem = _salvar_imagem(request.files.get('imagem')) or caminho_imagem
+                caminho_imagem = _imagem_do_form(produto['imagem'])
             except ValueError as e:
                 flash(str(e), 'error')
                 return render_template('editar.html', produto=produto)

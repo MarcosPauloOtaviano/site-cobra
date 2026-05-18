@@ -81,53 +81,7 @@
           <button type="button" class="secondary-link" data-open-cart>Ver sacola</button>
         </div>
       </div>
-
-      <div class="hero-showcase" aria-label="Produtos em destaque">
-        {% set hero_products = produtos[:3] %}
-        {% if hero_products %}
-          {% for p in hero_products %}
-            <article class="hero-tile hero-tile-{{ loop.index }}">
-              {% if p.imagem %}
-                <img src="{{ p.imagem }}" alt="{{ p.nome }}" />
-              {% else %}
-                <div class="image-placeholder">Os Cobra</div>
-              {% endif %}
-              <div class="hero-tile-info">
-                <span>{{ p.categoria or 'Drop atual' }}</span>
-                <strong>{{ p.nome }}</strong>
-              </div>
-            </article>
-          {% endfor %}
-        {% else %}
-          <article class="hero-tile hero-tile-1 hero-tile-empty">
-            <div class="image-placeholder">Drop</div>
-          </article>
-          <article class="hero-tile hero-tile-2 hero-tile-empty">
-            <div class="image-placeholder">Premium</div>
-          </article>
-          <article class="hero-tile hero-tile-3 hero-tile-empty">
-            <div class="image-placeholder">Sportswear</div>
-          </article>
-        {% endif %}
-      </div>
     </section>
-
-    <div class="brand-strip" aria-label="Letreiro de destaques da loja">
-      <div class="brand-strip-track">
-        <span>Veste quem tem a senha</span>
-        <span>Pronta entrega selecionada</span>
-        <span>Compra pelo WhatsApp</span>
-        <span>20 pontos a cada R$ 89</span>
-        <span>300 pontos viram desconto</span>
-        <span>Novidades toda semana</span>
-        <span>Veste quem tem a senha</span>
-        <span>Pronta entrega selecionada</span>
-        <span>Compra pelo WhatsApp</span>
-        <span>20 pontos a cada R$ 89</span>
-        <span>300 pontos viram desconto</span>
-        <span>Novidades toda semana</span>
-      </div>
-    </div>
 
     <section class="collection-section" id="vitrine">
       <div class="collection-heading">
@@ -246,6 +200,23 @@
         </div>
       {% endif %}
     </section>
+
+    <div class="brand-strip" aria-label="Letreiro de destaques da loja">
+      <div class="brand-strip-track">
+        <span>Veste quem tem a senha</span>
+        <span>Pronta entrega selecionada</span>
+        <span>Compra pelo WhatsApp</span>
+        <span>20 pontos a cada R$ 89</span>
+        <span>300 pontos viram desconto</span>
+        <span>Novidades toda semana</span>
+        <span>Veste quem tem a senha</span>
+        <span>Pronta entrega selecionada</span>
+        <span>Compra pelo WhatsApp</span>
+        <span>20 pontos a cada R$ 89</span>
+        <span>300 pontos viram desconto</span>
+        <span>Novidades toda semana</span>
+      </div>
+    </div>
 
     <section class="loyalty-section" id="clube">
       <div class="loyalty-copy">

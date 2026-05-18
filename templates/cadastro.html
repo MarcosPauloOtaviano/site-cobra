@@ -147,16 +147,15 @@
       <div class="field">
         <label>Upload da Imagem (JPG, PNG, WEBP)</label>
         <input type="file" name="imagem" accept="image/*" id="img-input" />
+        <input type="hidden" name="imagem_data" id="imagem-data" />
         <img id="img-preview" class="file-preview" alt="Pré-visualização" />
-        <p class="hint">
-          Opcional no ambiente local. Na Vercel, use o link abaixo para a foto ficar permanente. Tamanho máximo local: 8 MB.
-        </p>
+        <p class="hint" id="img-status">Opcional. A foto do aparelho é compactada antes de salvar para funcionar no site online. Tamanho máximo: 8 MB.</p>
       </div>
 
       <div class="field">
         <label>Link da Imagem</label>
         <input type="text" name="url_imagem" id="url-imagem" placeholder="https://..." value="{{ form.get('url_imagem', '') }}">
-        <p class="hint">Recomendado para produção. Também pode ficar em branco; a vitrine mostra uma imagem padrão.</p>
+        <p class="hint">Se preferir, cole um link pronto. Também pode ficar em branco; a vitrine mostra uma imagem padrão.</p>
       </div>
 
       <button type="submit" class="btn btn-green">✓ Cadastrar Produto</button>
@@ -168,11 +167,91 @@
 <script>
   const input = document.getElementById('img-input');
   const preview = document.getElementById('img-preview');
-  input.addEventListener('change', () => {
+  const imageDataInput = document.getElementById('imagem-data');
+  const imageStatus = document.getElementById('img-status');
+  const form = document.querySelector('form');
+
+  function setStatus(text, isError = false) {
+    if (!imageStatus) return;
+    imageStatus.textContent = text;
+    imageStatus.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+  }
+
+  function loadImage(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  function canvasDataUrl(canvas, quality) {
+    const webp = canvas.toDataURL('image/webp', quality);
+    if (webp.startsWith('data:image/webp')) return webp;
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
+  async function compactImage(file) {
+    if (!file) return '';
+    if (!file.type.startsWith('image/')) throw new Error('Selecione uma imagem válida.');
+    if (file.size > 8 * 1024 * 1024) throw new Error('Imagem acima de 8 MB. Escolha uma foto menor.');
+
+    const img = await loadImage(file);
+    const attempts = [
+      [1200, .78],
+      [1000, .72],
+      [860, .66],
+      [720, .58],
+      [620, .50],
+      [520, .42],
+      [440, .36]
+    ];
+    let best = '';
+
+    for (const [maxSide, quality] of attempts) {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      const ctx = canvas.getContext('2d', { alpha: false });
+      ctx.fillStyle = '#111111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      best = canvasDataUrl(canvas, quality);
+      if (best.length <= 48000) return best;
+    }
+
+    throw new Error('A foto ficou pesada para a tabela. Tente recortar a imagem ou usar um link.');
+  }
+
+  async function prepareImage() {
     const file = input.files[0];
+    imageDataInput.value = '';
     if (file) {
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
+      setStatus('Compactando imagem para envio...');
+      imageDataInput.value = await compactImage(file);
+      setStatus('Imagem pronta para salvar.');
+    }
+  }
+
+  input.addEventListener('change', () => {
+    prepareImage().catch(error => {
+      input.value = '';
+      preview.style.display = 'none';
+      imageDataInput.value = '';
+      setStatus(error.message, true);
+    });
+  });
+
+  form.addEventListener('submit', event => {
+    if (input.files[0] && !imageDataInput.value) {
+      event.preventDefault();
+      prepareImage()
+        .then(() => form.requestSubmit())
+        .catch(error => setStatus(error.message, true));
     }
   });
 </script>
