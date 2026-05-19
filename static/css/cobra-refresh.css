@@ -3706,6 +3706,317 @@ body {
   }
 }
 
+/* Final supplier/tablet sizing lock. Keep this after the older admin theme blocks. */
+body:not(.lookbook-page) {
+  overflow-x: hidden !important;
+}
+
+body:not(.lookbook-page) .admin-nav {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: center !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  padding: 0 clamp(.7rem, 1.8vw, 1.25rem) !important;
+  gap: .65rem !important;
+  flex-wrap: nowrap !important;
+}
+
+body:not(.lookbook-page) header:not(.admin-nav) {
+  min-height: 58px !important;
+  padding-inline: clamp(.75rem, 2vw, 1.25rem) !important;
+}
+
+body:not(.lookbook-page) .nav-title,
+body:not(.lookbook-page) .logo {
+  font-size: clamp(1rem, 2vw, 1.32rem) !important;
+  letter-spacing: .07em !important;
+  white-space: nowrap !important;
+}
+
+body:not(.lookbook-page) .nav-icon,
+body:not(.lookbook-page) .snake-icon {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  font-size: .9rem !important;
+}
+
+body:not(.lookbook-page) .nav-links {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  gap: .25rem !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+body:not(.lookbook-page) .nav-links::-webkit-scrollbar {
+  display: none;
+}
+
+body:not(.lookbook-page) .nav-links .hide-sm {
+  display: inline-flex !important;
+}
+
+body:not(.lookbook-page) .nav-links a,
+body:not(.lookbook-page) .btn-voltar,
+body:not(.lookbook-page) .back-link,
+body:not(.lookbook-page) .back,
+body:not(.lookbook-page) .cancel {
+  font-size: .74rem !important;
+}
+
+body:not(.lookbook-page) .nav-links a {
+  padding: .34rem .56rem !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+}
+
+body:not(.lookbook-page) .container,
+body:not(.lookbook-page) .main-container {
+  width: 100% !important;
+  max-width: 1180px !important;
+  padding: clamp(1.05rem, 2.2vw, 1.85rem) clamp(.72rem, 2vw, 1.2rem) 2.5rem !important;
+}
+
+body:not(.lookbook-page) .page {
+  width: 100% !important;
+  max-width: 760px !important;
+  padding-inline: clamp(.05rem, 1vw, .45rem) !important;
+}
+
+body:not(.lookbook-page) .box,
+body:not(.lookbook-page) .card,
+body:not(.lookbook-page) .search-box,
+body:not(.lookbook-page) .resultado-box {
+  padding: clamp(1rem, 2.2vw, 1.55rem) !important;
+}
+
+body:not(.lookbook-page) h1,
+body:not(.lookbook-page) .page-header h2,
+body:not(.lookbook-page) .search-box h1 {
+  font-size: clamp(1.8rem, 4.2vw, 2.6rem) !important;
+  line-height: .98 !important;
+  letter-spacing: .045em !important;
+}
+
+body:not(.lookbook-page) .grid-2,
+body:not(.lookbook-page) .report-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .72rem !important;
+}
+
+body:not(.lookbook-page) .report-form {
+  padding: .88rem !important;
+}
+
+body:not(.lookbook-page) .report-form .btn {
+  grid-column: 1 / -1 !important;
+}
+
+body:not(.lookbook-page) .field {
+  margin-bottom: .88rem !important;
+}
+
+body:not(.lookbook-page) .section-title,
+body:not(.lookbook-page) .sec-title {
+  margin: 1.05rem 0 .75rem !important;
+  padding-bottom: .38rem !important;
+  font-size: .62rem !important;
+}
+
+body:not(.lookbook-page) label {
+  font-size: .64rem !important;
+  margin-bottom: .32rem !important;
+}
+
+body:not(.lookbook-page) input[type="text"],
+body:not(.lookbook-page) input[type="number"],
+body:not(.lookbook-page) input[type="password"],
+body:not(.lookbook-page) input[type="date"],
+body:not(.lookbook-page) input[type="file"],
+body:not(.lookbook-page) select,
+body:not(.lookbook-page) textarea {
+  min-height: 42px !important;
+  padding: .6rem .72rem !important;
+  font-size: .84rem !important;
+}
+
+body:not(.lookbook-page) textarea {
+  min-height: 70px !important;
+}
+
+body:not(.lookbook-page) .btn,
+body:not(.lookbook-page) .btn-novo,
+body:not(.lookbook-page) .btn-edit,
+body:not(.lookbook-page) .btn-del,
+body:not(.lookbook-page) .btn-buscar,
+body:not(.lookbook-page) .btn-green,
+body:not(.lookbook-page) .btn-warn,
+body:not(.lookbook-page) .btn-success {
+  min-height: 40px !important;
+  padding: .58rem .78rem !important;
+  font-size: .78rem !important;
+}
+
+body:not(.lookbook-page) .stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: .68rem !important;
+  margin-bottom: clamp(1rem, 2vw, 1.4rem) !important;
+}
+
+body:not(.lookbook-page) .stat {
+  padding: .78rem !important;
+}
+
+body:not(.lookbook-page) .stat h3,
+body:not(.lookbook-page) th {
+  font-size: .58rem !important;
+  letter-spacing: .11em !important;
+}
+
+body:not(.lookbook-page) .stat p {
+  font-size: clamp(1.45rem, 4vw, 2.05rem) !important;
+}
+
+body:not(.lookbook-page) .grid {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px) !important;
+  gap: .85rem !important;
+}
+
+body:not(.lookbook-page) .table-wrap,
+body:not(.lookbook-page) .panel {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+body:not(.lookbook-page) table {
+  min-width: 540px !important;
+}
+
+body:not(.lookbook-page) th,
+body:not(.lookbook-page) td {
+  padding: .58rem .66rem !important;
+  font-size: .76rem !important;
+}
+
+body:not(.lookbook-page) .current-img,
+body:not(.lookbook-page) .file-preview {
+  max-height: 145px !important;
+}
+
+body:not(.lookbook-page) .passos {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: .85rem !important;
+}
+
+body:not(.lookbook-page) .passo {
+  padding: 1rem !important;
+}
+
+body:not(.lookbook-page) .passo strong {
+  font-size: .92rem !important;
+}
+
+body:not(.lookbook-page) .passo span {
+  font-size: .76rem !important;
+}
+
+@media (max-width: 820px) {
+  body:not(.lookbook-page) .admin-nav {
+    grid-template-columns: minmax(88px, auto) minmax(0, 1fr) !important;
+  }
+
+  body:not(.lookbook-page) .nav-title {
+    max-width: 120px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body:not(.lookbook-page) .nav-links {
+    justify-content: flex-start !important;
+  }
+
+  body:not(.lookbook-page) .grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  body:not(.lookbook-page) .admin-nav {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    min-height: 78px !important;
+    padding: .58rem .68rem .52rem !important;
+    gap: .42rem !important;
+  }
+
+  body:not(.lookbook-page) header:not(.admin-nav) {
+    min-height: 56px !important;
+    padding-inline: .68rem !important;
+  }
+
+  body:not(.lookbook-page) .nav-title {
+    max-width: 170px !important;
+    font-size: .94rem !important;
+  }
+
+  body:not(.lookbook-page) .nav-brand {
+    width: 100% !important;
+  }
+
+  body:not(.lookbook-page) .nav-links {
+    width: 100% !important;
+    padding-bottom: .06rem !important;
+  }
+
+  body:not(.lookbook-page) .logo {
+    max-width: 190px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body:not(.lookbook-page) .nav-links a {
+    font-size: .69rem !important;
+    padding-inline: .46rem !important;
+  }
+
+  body:not(.lookbook-page) .grid-2,
+  body:not(.lookbook-page) .report-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .56rem !important;
+  }
+
+  body:not(.lookbook-page) .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  body:not(.lookbook-page) .passos {
+    grid-template-columns: repeat(3, minmax(106px, 1fr)) !important;
+    overflow-x: auto !important;
+    padding-top: .8rem !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 380px) {
+  body:not(.lookbook-page) .grid-2,
+  body:not(.lookbook-page) .report-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:not(.lookbook-page) .nav-title {
+    max-width: 146px !important;
+  }
+}
+
 /* Final desktop-like storefront override for phone and tablet. */
 @media (max-width: 1024px) {
   .lookbook-page .brand-strip {
