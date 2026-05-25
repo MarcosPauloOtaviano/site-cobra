@@ -11,6 +11,7 @@ import os
 import uuid
 import logging
 import re
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
@@ -158,8 +159,15 @@ def _telefone_valido(telefone):
 
 
 def _calcular_pontos(valor):
-    faixas = int((max(0, float(valor or 0)) + 0.000001) // 89)
-    return faixas * 20
+    try:
+        valor_decimal = Decimal(str(valor or 0))
+    except (InvalidOperation, ValueError):
+        valor_decimal = Decimal('0')
+
+    centavos = int((max(valor_decimal, Decimal('0')) * 100).quantize(Decimal('1'), rounding=ROUND_HALF_UP))
+    if centavos < 8900:
+        return 0
+    return centavos // 445
 
 
 def _parse_data_planilha(valor):
@@ -520,7 +528,7 @@ def registrar_venda():
                 flash('Informe um valor de venda válido.', 'error')
                 return redirect(url_for('registrar_venda'))
 
-            # Regra de pontos: a cada R$ 89 em compra, soma 20 pontos.
+            # Regra de pontos: a partir de R$ 89, cada R$ 4,45 soma 1 ponto.
             pontos_ganhos = _calcular_pontos(valor)
 
             # Atualiza ou cria registro de pontos

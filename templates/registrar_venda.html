@@ -102,7 +102,7 @@
 <div class="page">
   <a href="/admin/painel" class="back-link">← Voltar ao painel</a>
   <h1>LANÇAR <em>VENDA</em></h1>
-  <p class="sub">Registre a venda e pontue o cliente automaticamente. A cada R$ 89, o cliente recebe 20 pontos.</p>
+  <p class="sub">Registre a venda e pontue o cliente automaticamente. A partir de R$ 89, cada R$ 4,45 soma 1 ponto.</p>
 
   {% with msgs = get_flashed_messages(with_categories=true) %}
     {% if msgs %}
@@ -217,7 +217,8 @@
   function atualizarPontos() {
     if (!valorInput || !ptsVal) return;
     const v = parseValor(valorInput.value);
-    const pontos = Math.floor((Math.max(0, v) + 0.000001) / 89) * 20;
+    const centavos = Math.round(Math.max(0, v) * 100);
+    const pontos = centavos >= 8900 ? Math.floor(centavos / 445) : 0;
       ptsVal.textContent = pontos > 0 ? `${pontos} pontos` : '0 pontos (mínimo R$ 89)';
       ptsVal.style.color = pontos > 0 ? 'var(--gold)' : 'var(--white-dim)';
   }
