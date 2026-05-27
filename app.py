@@ -47,6 +47,8 @@ logger = logging.getLogger(__name__)
 
 AMBIENTE_VERCEL = bool(os.getenv('VERCEL') or os.getenv('VERCEL_ENV'))
 PRODUCAO = AMBIENTE_VERCEL or os.getenv('FLASK_ENV') == 'production'
+WHATSAPP_NUM_PADRAO = '5535998340719'
+WHATSAPP_NUM_OBSOLETOS = {'5535999014589'}
 
 app = Flask(__name__)
 secret_key = os.getenv('FLASK_SECRET_KEY')
@@ -249,6 +251,13 @@ def _telefone_valido(telefone):
     return len(_telefone_limpo(telefone)) in (10, 11)
 
 
+def _whatsapp_numero_loja():
+    numero = ''.join(filter(str.isdigit, os.getenv('WHATSAPP_NUM', '')))
+    if not numero or numero in WHATSAPP_NUM_OBSOLETOS:
+        return WHATSAPP_NUM_PADRAO
+    return numero
+
+
 def _calcular_pontos(valor):
     try:
         valor_decimal = Decimal(str(valor or 0))
@@ -335,7 +344,7 @@ def aplicar_headers_basicos(response):
 @app.context_processor
 def variaveis_globais():
     return {
-        'whatsapp_num': os.getenv('WHATSAPP_NUM', '5535999014589'),
+        'whatsapp_num': _whatsapp_numero_loja(),
         'cache_bust': os.getenv('ASSET_VERSION', 'attack15'),
         'ambiente_vercel': AMBIENTE_VERCEL,
         'csrf_token': _csrf_token,
