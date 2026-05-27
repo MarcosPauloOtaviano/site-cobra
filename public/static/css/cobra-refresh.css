@@ -4816,3 +4816,40 @@ body.lookbook-page::before {
     transition-duration: .01ms !important;
   }
 }
+
+.lookbook-page .brand-mark {
+  width: 50px !important;
+  height: 50px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 8px !important;
+  background: #050604 !important;
+  border: 1px solid rgba(255, 229, 0, .42) !important;
+  box-shadow: 0 0 32px rgba(255, 229, 0, .24), 0 12px 28px rgba(0, 0, 0, .34) !important;
+  transform: none !important;
+}
+
+.lookbook-page .brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lookbook-page .brand-logo-fallback {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--attack-yellow);
+  font-family: "Montserrat", Arial, sans-serif;
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+@media (max-width: 620px) {
+  .lookbook-page .brand-mark {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}

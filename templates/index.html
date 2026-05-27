@@ -119,7 +119,9 @@
 
   <header class="site-header">
     <a href="/" class="brand-lockup" aria-label="Os Cobra da Bola">
-      <span class="brand-mark" aria-hidden="true">OC</span>
+      <span class="brand-mark" aria-hidden="true">
+        <img src="{{ url_for('static', filename='img/logo-cobra-bola.jpg') }}" alt="" loading="eager" />
+      </span>
       <span class="brand-copy">
         <strong>Os Cobra</strong>
         <small>da Bola</small>
@@ -326,7 +328,9 @@
   <footer class="site-footer">
     <div>
       <a href="/" class="brand-lockup footer-brand" aria-label="Os Cobra da Bola">
-        <span class="brand-mark" aria-hidden="true">OC</span>
+        <span class="brand-mark" aria-hidden="true">
+          <img src="{{ url_for('static', filename='img/logo-cobra-bola.jpg') }}" alt="" loading="lazy" />
+        </span>
         <span class="brand-copy">
           <strong>Os Cobra</strong>
           <small>da Bola</small>
@@ -397,6 +401,9 @@
       const fallback = document.createElement('div');
       if (img.closest('.cart-item-media')) {
         fallback.className = 'cart-item-placeholder';
+        fallback.textContent = 'OC';
+      } else if (img.closest('.brand-mark')) {
+        fallback.className = 'brand-logo-fallback';
         fallback.textContent = 'OC';
       } else if (img.closest('.hero-tile')) {
         fallback.className = 'image-placeholder';
