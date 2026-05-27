@@ -15,6 +15,8 @@ https://site-cobra.vercel.app
 - Permite cadastrar, editar e remover produtos.
 - Registra vendas e calcula pontos automaticamente.
 - Gera relatorios para acompanhamento das vendas.
+- Publica Politica de Privacidade e Termos de Uso.
+- Usa protecoes de seguranca como CSRF, limite de tentativas e headers HTTP.
 - Usa Google Sheets como base de dados.
 
 ## Tecnologias
@@ -48,6 +50,10 @@ Para detalhes de publicacao, veja `DEPLOY.md`.
 ## Objetivo
 
 Esse projeto mostra uma loja online com visual forte e funcoes reais de operacao: vitrine, pedido, estoque, vendas, clientes e pontos. E um exemplo de site que ajuda o negocio a vender e tambem a se organizar.
+
+## Privacidade
+
+O clube de pontos usa telefone/WhatsApp como identificador, sem exigir CPF. A finalidade e explicada na Politica de Privacidade publicada no proprio site.
 
 ## Contato
 

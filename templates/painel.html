@@ -220,7 +220,8 @@
             <div class="acoes">
               <a href="/admin/editar/{{ produto.id }}" class="btn-edit">✏️ Editar</a>
               <form action="/admin/deletar/{{ produto.id }}" method="POST" style="display:inline"
-                    onsubmit="return confirm('Excluir {{ produto.nome }}?')">
+                    data-delete-form data-product-name="{{ produto.nome }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn-del">🗑 Excluir</button>
               </form>
             </div>
@@ -237,5 +238,15 @@
     </table>
   </div>
 </div>
+<script>
+  document.addEventListener('submit', event => {
+    const form = event.target.closest('[data-delete-form]');
+    if (!form) return;
+    const nome = form.dataset.productName || 'este produto';
+    if (!confirm(`Excluir ${nome}?`)) {
+      event.preventDefault();
+    }
+  });
+</script>
 </body>
 </html>

@@ -292,6 +292,7 @@
     footer strong { color: var(--yellow); }
     footer a { color: var(--white-dim); text-decoration: none; transition: color .2s; }
     footer a:hover { color: var(--yellow); }
+    .footer-links { display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-top:.75rem; }
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
 </head>
@@ -321,6 +322,7 @@
     <h1>MEUS PONTOS</h1>
     <p>Acompanhe seu progresso e resgate seus descontos.</p>
     <form method="POST" action="/meus-pontos">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <div class="input-group">
         <input type="text" name="telefone" id="telefone-input" placeholder="Digite seu WhatsApp com DDD" maxlength="15" required value="{{ telefone_buscado }}">
         <button type="submit" class="btn-buscar">Consultar Saldo ➔</button>
@@ -394,7 +396,11 @@
 </div>
 
 <footer>
-  <p>© 2025 <strong>Os Cobra da Bola</strong> — Guaxupé, MG</p>
+  <p>© 2026 <strong>Os Cobra da Bola</strong> — Guaxupé, MG</p>
+  <div class="footer-links">
+    <a href="/politica-privacidade">Política de Privacidade</a>
+    <a href="/termos-de-uso">Termos de Uso</a>
+  </div>
 </footer>
 
 <script>

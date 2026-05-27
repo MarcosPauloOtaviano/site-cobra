@@ -36,7 +36,7 @@ def _cache_segundos():
         return 30
 
 PRODUTO_HEADERS = [
-    'id', 'nome do produto', 'categoria', 'preço', 'estoque',
+    'id', 'nome do produto', 'categoria', 'preço de compra', 'preço', 'estoque',
     'url da imagem', 'tamanhos', 'disponibilidade', 'fornecedor',
 ]
 PRODUTO_ALIASES = {
@@ -44,6 +44,7 @@ PRODUTO_ALIASES = {
     'nome do produto': ['nome do produto', 'nome', 'produto'],
     'categoria':       ['categoria'],
     'preço':           ['preço', 'preco', 'valor'],
+    'preço de compra': ['preço de compra', 'preco de compra', 'valor de compra', 'valor_compra', 'preco_compra', 'custo', 'custo_unitario'],
     'estoque':         ['estoque', 'qtd', 'quantidade'],
     'url da imagem':   ['url da imagem', 'imagem', 'foto', 'url_imagem'],
     'tamanhos':        ['tamanhos', 'tamanho'],
@@ -60,7 +61,8 @@ PONTOS_ALIASES = {
 }
 VENDAS_HEADERS = [
     'data', 'telefone', 'nome_cliente', 'id_produto', 'valor', 'pontos',
-    'fornecedor', 'obs', 'id_venda', 'quantidade',
+    'fornecedor', 'obs', 'id_venda', 'quantidade', 'custo_unitario',
+    'custo_total', 'lucro',
 ]
 VENDAS_ALIASES = {
     'data':         ['data', 'data_venda'],
@@ -73,6 +75,9 @@ VENDAS_ALIASES = {
     'obs':          ['obs', 'observacao', 'observação'],
     'id_venda':     ['id_venda', 'venda_id'],
     'quantidade':   ['quantidade', 'qtd'],
+    'custo_unitario': ['custo_unitario', 'custo unitario', 'custo unitário', 'preco_compra', 'preço de compra'],
+    'custo_total':    ['custo_total', 'custo total', 'saida', 'saída', 'valor_compra_total'],
+    'lucro':          ['lucro', 'saldo', 'resultado'],
 }
 USUARIO_HEADERS = ['usuario', 'senha_hash', 'nome_fornecedor']
 USUARIO_ALIASES = {
@@ -381,12 +386,15 @@ def fornecedor_permitido(produto_fornecedor, fornecedor_logado):
 
 def normalizar_produto(raw):
     preco_float = parse_preco(valor_por_alias(raw, 'preço', 0, PRODUTO_ALIASES))
+    preco_compra_float = parse_preco(valor_por_alias(raw, 'preço de compra', 0, PRODUTO_ALIASES))
     return {
         'id':             str(valor_por_alias(raw, 'id', '', PRODUTO_ALIASES)),
         'nome':           valor_por_alias(raw, 'nome do produto', '', PRODUTO_ALIASES),
         'categoria':      valor_por_alias(raw, 'categoria', '', PRODUTO_ALIASES),
         'preco':          formatar_preco(preco_float),
         'preco_raw':      preco_float,
+        'preco_compra':     formatar_preco(preco_compra_float),
+        'preco_compra_raw': preco_compra_float,
         'estoque':        parse_int(valor_por_alias(raw, 'estoque', 0, PRODUTO_ALIASES)),
         'imagem':         valor_por_alias(raw, 'url da imagem', '', PRODUTO_ALIASES),
         'tamanhos':       valor_por_alias(raw, 'tamanhos', '', PRODUTO_ALIASES),
@@ -491,4 +499,6 @@ def mensagem_erro_planilha(erro, acao):
     if '429' in texto or 'Quota exceeded' in texto:
         return (f'Limite temporário do Google Sheets atingido ao {acao}. '
                 f'Aguarde cerca de 1 minuto e tente novamente.')
+    if os.getenv('VERCEL') or os.getenv('VERCEL_ENV') or os.getenv('FLASK_ENV') == 'production':
+        return f'Não foi possível {acao} agora. Tente novamente em instantes.'
     return f'Erro ao {acao}: {erro}'

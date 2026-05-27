@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termos de Uso — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --ink:#06080a;--deep:#0a0e11;--surface:#111519;--card:#161b20;
+      --border:#232c35;--gold:#f5c518;--white:#eef2f5;--dim:#9aa6b4;--danger:#ef4444;--r:10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--deep);color:var(--white);font-family:'DM Sans',sans-serif;line-height:1.7}
+    header{background:rgba(6,8,10,.96);border-bottom:1px solid var(--border);padding:1rem;position:sticky;top:0;z-index:10}
+    .nav{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .brand{font-family:'Bebas Neue',cursive;color:var(--white);text-decoration:none;font-size:1.45rem;letter-spacing:3px}
+    .brand em{color:var(--gold);font-style:normal}
+    .nav a:not(.brand){color:var(--dim);text-decoration:none;font-size:.9rem}
+    .nav a:hover{color:var(--gold)}
+    main{max-width:980px;margin:0 auto;padding:3rem 1rem 4rem}
+    .hero{border:1px solid rgba(245,197,24,.18);background:linear-gradient(135deg,rgba(245,197,24,.09),rgba(255,255,255,.02));border-radius:var(--r);padding:2rem;margin-bottom:1rem}
+    h1,h2{font-family:'Bebas Neue',cursive;letter-spacing:2px;line-height:1;color:var(--white)}
+    h1{font-size:3rem;margin-bottom:.75rem}
+    h1 em,h2 em{color:var(--gold);font-style:normal}
+    h2{font-size:1.8rem;margin:2rem 0 .75rem}
+    p,li{color:var(--dim);font-size:.96rem}
+    ul{padding-left:1.2rem;display:grid;gap:.45rem}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-top:1rem}
+    .danger{border-color:rgba(239,68,68,.35)}
+    strong{color:var(--white)}
+    a{color:var(--gold)}
+    .updated{font-size:.82rem;color:var(--dim);margin-top:.6rem}
+    footer{border-top:1px solid var(--border);padding:1.5rem 1rem;color:var(--dim);text-align:center}
+    @media(max-width:700px){.nav{align-items:flex-start;flex-direction:column}h1{font-size:2.45rem}}
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+<header>
+  <div class="nav">
+    <a class="brand" href="/">OS <em>COBRA</em> DA BOLA</a>
+    <nav>
+      <a href="/">Vitrine</a>
+      <a href="/politica-privacidade" style="margin-left:1rem">Privacidade</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Termos de <em>Uso</em></h1>
+    <p>
+      Estes termos definem as regras para usar a vitrine, o clube de pontos e a área do fornecedor
+      do site Os Cobra da Bola.
+    </p>
+    <p class="updated">Atualizado em 27 de maio de 2026.</p>
+  </section>
+
+  <section class="card">
+    <h2>Uso permitido</h2>
+    <p>
+      O site deve ser usado para visualizar produtos, montar pedidos, consultar pontos e administrar
+      produtos/vendas quando houver acesso autorizado de fornecedor.
+    </p>
+  </section>
+
+  <section class="card danger">
+    <h2>Condutas proibidas</h2>
+    <ul>
+      <li>Tentar acessar painel, planilhas, contas, rotas ou dados sem autorização.</li>
+      <li>Enviar arquivos falsos, links maliciosos, scripts ou conteúdo que tente quebrar o site.</li>
+      <li>Automatizar consultas, forçar senhas, raspar dados ou sobrecarregar o serviço.</li>
+      <li>Manipular preço, estoque, carrinho, pontuação ou qualquer informação operacional.</li>
+      <li>Usar imagens, marcas, textos ou dados de terceiros sem autorização.</li>
+      <li>Praticar fraude, spam, engenharia social, abuso de reembolso ou falsa identidade.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Pedidos e disponibilidade</h2>
+    <p>
+      A vitrine ajuda o cliente a escolher produtos e enviar o pedido pelo WhatsApp. Preços, estoque,
+      tamanhos, prazos e forma de pagamento podem ser confirmados no atendimento antes da conclusão
+      da compra.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Clube de pontos</h2>
+    <p>
+      Os pontos são vinculados ao telefone/WhatsApp informado. A partir de R$ 89, cada R$ 4,45 em
+      compra válida gera 1 ponto. O resgate, descontos e eventuais ajustes dependem de confirmação
+      da loja para evitar duplicidade, erro de lançamento ou uso indevido.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Área do fornecedor</h2>
+    <ul>
+      <li>O acesso é pessoal e deve ser protegido pelo fornecedor autorizado.</li>
+      <li>Produtos, fotos, preços, custos, estoque e vendas devem ser informados corretamente.</li>
+      <li>Credenciais não devem ser compartilhadas com pessoas não autorizadas.</li>
+      <li>A loja pode suspender acesso em caso de abuso, erro grave ou risco de segurança.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Propriedade e conteúdo</h2>
+    <p>
+      Nome, layout, textos, identidade visual e organização do site pertencem aos seus responsáveis.
+      O fornecedor só deve cadastrar imagens e informações que tenha autorização para utilizar.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Segurança e suspensão</h2>
+    <p>
+      Podemos bloquear requisições, remover conteúdo, limitar consultas ou suspender acessos quando
+      houver suspeita de ataque, fraude, abuso, violação destes termos ou risco aos dados de clientes.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Contato</h2>
+    <p>
+      Dúvidas, solicitações sobre dados ou comunicação de problema de segurança podem ser feitas pelo
+      WhatsApp da loja: <a href="https://wa.me/{{ whatsapp_num }}" rel="noopener">wa.me/{{ whatsapp_num }}</a>.
+    </p>
+  </section>
+</main>
+
+<footer>
+  Uso forte, regra clara. Os Cobra da Bola.
+</footer>
+</body>
+</html>

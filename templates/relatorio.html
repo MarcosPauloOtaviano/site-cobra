@@ -34,16 +34,19 @@
     input[type="date"]{width:100%;padding:.75rem .9rem;background:var(--surface);border:1px solid var(--border-lit);color:var(--white);border-radius:var(--r);font:inherit}
     input[type="date"]:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,197,24,.12)}
     .btn{border:0;border-radius:var(--r);padding:.82rem 1rem;background:var(--gold);color:var(--ink);font-weight:900;cursor:pointer;text-transform:uppercase}
-    .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1rem;margin-bottom:1.25rem}
+    .stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1rem;margin-bottom:1.25rem}
     .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem}
     .stat h3{font-size:.68rem;color:var(--white-dim);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:.45rem}
     .stat p{font-family:'Bebas Neue',cursive;font-size:2rem;line-height:1;color:var(--white)}
     .stat.money p,.stat.points p{color:var(--gold)}
+    .stat.profit p{color:var(--success)}
     .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:1rem}
     .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
     .panel-head{display:flex;justify-content:space-between;gap:1rem;align-items:center;padding:1rem;border-bottom:1px solid var(--border)}
     .panel-head h2{font-size:.78rem;letter-spacing:1.6px;text-transform:uppercase}
     .panel-head span{color:var(--white-dim);font-size:.8rem}
+    .table-scroll{width:100%;overflow-x:auto}
+    .table-scroll table{min-width:760px}
     table{width:100%;border-collapse:collapse}
     th,td{padding:.82rem 1rem;border-bottom:1px solid rgba(245,197,24,.12);text-align:left;font-size:.86rem}
     th{font-size:.68rem;text-transform:uppercase;letter-spacing:1.4px;color:var(--gold);background:rgba(245,197,24,.06)}
@@ -54,11 +57,12 @@
     .rank-list{display:grid;gap:.75rem;padding:1rem}
     .rank-item{border:1px solid rgba(245,197,24,.16);border-radius:var(--r);padding:.85rem;background:rgba(245,197,24,.045)}
     .rank-item strong{display:block;margin-bottom:.25rem}
-    .rank-meta{display:flex;justify-content:space-between;gap:.75rem;color:var(--white-dim);font-size:.78rem}
+    .rank-meta{display:flex;justify-content:space-between;gap:.75rem;color:var(--white-dim);font-size:.78rem;margin-top:.28rem}
     .flashes{margin-bottom:1rem}
     .flash{padding:.75rem 1rem;border-radius:var(--r);font-size:.88rem}
     .flash-error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:#fca5a5}
     @media(max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.report-form{grid-template-columns:1fr}.page-header{display:block}.hide-sm{display:none}}
+    @media(max-width:560px){.container{padding:1.25rem .75rem 3rem}h1{font-size:2.45rem}.stat p{font-size:1.55rem}.panel-head{align-items:flex-start;flex-direction:column}.rank-meta{display:block}.rank-meta span{display:block;margin-top:.2rem}}
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
 </head>
@@ -91,7 +95,7 @@
   <div class="page-header">
     <div>
       <h1>GERAR <em>RELATÓRIO</em></h1>
-      <p class="sub">Controle o que entrou em vendas e o que saiu em produtos no período escolhido.</p>
+      <p class="sub">Controle venda, custo de compra, lucro e saída de produtos no período escolhido.</p>
     </div>
   </div>
 
@@ -109,10 +113,11 @@
 
   <section class="stats" aria-label="Resumo do período">
     <div class="stat money"><h3>Entrou</h3><p>R$ {{ stats.entradas_fmt }}</p></div>
-    <div class="stat"><h3>Saiu</h3><p>{{ stats.saidas }} un.</p></div>
+    <div class="stat money"><h3>Saiu</h3><p>R$ {{ stats.saidas_fmt }}</p></div>
+    <div class="stat profit"><h3>Lucro</h3><p>R$ {{ stats.lucro_fmt }}</p></div>
+    <div class="stat"><h3>Peças</h3><p>{{ stats.itens }} un.</p></div>
     <div class="stat"><h3>Vendas</h3><p>{{ stats.vendas }}</p></div>
     <div class="stat points"><h3>Pontos</h3><p>{{ stats.pontos }}</p></div>
-    <div class="stat money"><h3>Ticket Médio</h3><p>R$ {{ stats.ticket_medio }}</p></div>
   </section>
 
   <section class="grid">
@@ -122,36 +127,42 @@
         <span>{{ inicio }} até {{ fim }}</span>
       </div>
       {% if vendas %}
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Cliente</th>
-              <th>Produto</th>
-              <th>Qtd</th>
-              <th>Valor</th>
-              <th>Pts</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for venda in vendas %}
+        <div class="table-scroll">
+          <table>
+            <thead>
               <tr>
-                <td>{{ venda.data }}</td>
-                <td>
-                  <strong>{{ venda.cliente or "Cliente" }}</strong>
-                  <div class="muted">{{ venda.telefone }}</div>
-                </td>
-                <td>
-                  {{ venda.produto }}
-                  <div class="muted">{{ venda.produto_id }}</div>
-                </td>
-                <td>{{ venda.quantidade }}</td>
-                <td class="money">R$ {{ venda.valor_fmt }}</td>
-                <td>{{ venda.pontos }}</td>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Produto</th>
+                <th>Qtd</th>
+                <th>Venda</th>
+                <th>Custo</th>
+                <th>Lucro</th>
+                <th>Pts</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for venda in vendas %}
+                <tr>
+                  <td>{{ venda.data }}</td>
+                  <td>
+                    <strong>{{ venda.cliente or "Cliente" }}</strong>
+                    <div class="muted">{{ venda.telefone }}</div>
+                  </td>
+                  <td>
+                    {{ venda.produto }}
+                    <div class="muted">{{ venda.produto_id }}</div>
+                  </td>
+                  <td>{{ venda.quantidade }}</td>
+                  <td class="money">R$ {{ venda.valor_fmt }}</td>
+                  <td>R$ {{ venda.custo_total_fmt }}</td>
+                  <td class="money">R$ {{ venda.lucro_fmt }}</td>
+                  <td>{{ venda.pontos }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       {% else %}
         <div class="empty">Nenhuma venda encontrada nesse período.</div>
       {% endif %}
@@ -169,7 +180,11 @@
               <strong>{{ item.produto }}</strong>
               <div class="rank-meta">
                 <span>{{ item.quantidade }} un. / {{ item.vendas }} venda(s)</span>
-                <span class="money">R$ {{ item.receita_fmt }}</span>
+                <span class="money">Venda R$ {{ item.receita_fmt }}</span>
+              </div>
+              <div class="rank-meta">
+                <span>Custo R$ {{ item.custo_fmt }}</span>
+                <span class="money">Lucro R$ {{ item.lucro_fmt }}</span>
               </div>
             </div>
           {% endfor %}

@@ -75,6 +75,11 @@
 
     select option { background:var(--surface); }
     .hint { font-size:.75rem; color:var(--muted); margin-top:.3rem; }
+    @media(max-width:560px){
+      body{padding:1rem .75rem}
+      .card{padding:1.25rem}
+      .grid-2{grid-template-columns:1fr}
+    }
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
 </head>
@@ -98,6 +103,7 @@
   <div class="card">
     {% set form = form if form is defined else {} %}
     <form method="POST" action="/admin/cadastrar" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
       <div class="section-title">Identificação</div>
       <div class="grid-2">
@@ -117,15 +123,25 @@
         <input type="text" name="nome_produto" required placeholder="Ex: Camisa Portugal Versão Jogador" value="{{ form.get('nome_produto', '') }}">
       </div>
 
-      <div class="section-title">Preço e Estoque</div>
+      <div class="section-title">Compra, Venda e Estoque</div>
       <div class="grid-2">
         <div class="field">
-          <label>Preço (R$)</label>
+          <label>Valor de Compra (R$)</label>
+          <input type="text" name="preco_compra" required inputmode="decimal" placeholder="Ex: 55,00" value="{{ form.get('preco_compra', '') }}">
+        </div>
+        <div class="field">
+          <label>Valor de Venda (R$)</label>
           <input type="text" name="preco" required inputmode="decimal" placeholder="Ex: 89,90 ou 89.90" value="{{ form.get('preco', '') }}">
         </div>
+      </div>
+      <div class="grid-2">
         <div class="field">
           <label>Estoque (Qtd)</label>
           <input type="number" name="estoque" required placeholder="Ex: 5" min="0" value="{{ form.get('estoque', '') }}">
+        </div>
+        <div class="field">
+          <label>Balanço</label>
+          <input type="text" value="Lucro calculado automaticamente no relatório" disabled>
         </div>
       </div>
 

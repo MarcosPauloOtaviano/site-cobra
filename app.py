@@ -11,11 +11,15 @@ import os
 import uuid
 import logging
 import re
+import time
+from hmac import compare_digest
+from secrets import token_urlsafe
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
-from flask import (Flask, flash, redirect, render_template,
+from flask import (Flask, abort, flash, redirect, render_template,
                    request, session, url_for)
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
@@ -54,6 +58,8 @@ DIRETORIO_ATUAL  = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER    = os.path.join(DIRETORIO_ATUAL, 'static', 'uploads')
 EXTENSOES_OK     = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 DATA_IMAGE_RE    = re.compile(r'^data:image/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=\s]+$')
+PRODUTO_ID_RE    = re.compile(r'^[A-Za-z0-9_-]{1,40}$')
+_RATE_LIMITS     = {}
 
 app.config['UPLOAD_FOLDER']      = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
@@ -73,17 +79,102 @@ def _extensao_ok(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in EXTENSOES_OK
 
 
+def _texto_curto(valor, limite=120):
+    texto = re.sub(r'\s+', ' ', str(valor or '').strip())
+    return texto[:limite]
+
+
+def _client_ip():
+    forwarded = request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+    return forwarded or request.remote_addr or 'local'
+
+
+def _rate_limit_ok(escopo, limite, janela_segundos):
+    agora = time.time()
+    chave = f'{escopo}:{_client_ip()}'
+    expiracao = agora - janela_segundos
+
+    for key in list(_RATE_LIMITS.keys()):
+        _RATE_LIMITS[key] = [t for t in _RATE_LIMITS[key] if t >= expiracao]
+        if not _RATE_LIMITS[key]:
+            _RATE_LIMITS.pop(key, None)
+
+    eventos = [t for t in _RATE_LIMITS.get(chave, []) if t >= expiracao]
+    if len(eventos) >= limite:
+        _RATE_LIMITS[chave] = eventos
+        return False
+    eventos.append(agora)
+    _RATE_LIMITS[chave] = eventos
+    return True
+
+
+def _csrf_token():
+    token = session.get('_csrf_token')
+    if not token:
+        token = token_urlsafe(32)
+        session['_csrf_token'] = token
+    return token
+
+
+def _assinatura_imagem_ok(img_file):
+    try:
+        posicao = img_file.stream.tell()
+        img_file.stream.seek(0)
+        cabecalho = img_file.stream.read(16)
+        img_file.stream.seek(posicao)
+    except Exception:
+        return False
+
+    return (
+        cabecalho.startswith(b'\x89PNG\r\n\x1a\n')
+        or cabecalho.startswith(b'\xff\xd8\xff')
+        or cabecalho.startswith((b'GIF87a', b'GIF89a'))
+        or (cabecalho.startswith(b'RIFF') and cabecalho[8:12] == b'WEBP')
+    )
+
+
+def _normalizar_url_imagem(url_imagem):
+    url_imagem = str(url_imagem or '').strip()
+    if not url_imagem:
+        return ''
+    if len(url_imagem) > 2048:
+        raise ValueError('O link da imagem está muito longo.')
+
+    url_sem_quebra = url_imagem.replace('\n', '').replace('\r', '')
+    if url_sem_quebra.startswith('data:image/'):
+        if len(url_sem_quebra) > 50000 or not DATA_IMAGE_RE.match(url_sem_quebra):
+            raise ValueError('A imagem salva não parece válida. Selecione a foto novamente ou cole um link HTTPS.')
+        return url_sem_quebra
+
+    if url_sem_quebra.startswith('/static/uploads/'):
+        if '..' in url_sem_quebra or '\\' in url_sem_quebra:
+            raise ValueError('Caminho de imagem inválido.')
+        return url_sem_quebra
+
+    parsed = urlparse(url_sem_quebra)
+    if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        raise ValueError('Use um link de imagem começando com http:// ou https://.')
+    return url_sem_quebra
+
+
 def _salvar_imagem(img_file):
     """Salva upload e retorna o path relativo, ou '' se não houver arquivo."""
     if not img_file or not img_file.filename:
         return ''
     if not _extensao_ok(img_file.filename):
         raise ValueError('Use uma imagem nos formatos PNG, JPG, JPEG, GIF ou WEBP.')
+    if not _assinatura_imagem_ok(img_file):
+        raise ValueError('O arquivo enviado não parece ser uma imagem válida.')
     if AMBIENTE_VERCEL:
         raise ValueError('No site online, aguarde a compactação da imagem antes de salvar. Se persistir, tente uma foto menor.')
 
-    nome = f"{uuid.uuid4().hex[:8]}_{secure_filename(img_file.filename)}"
-    img_file.save(os.path.join(app.config['UPLOAD_FOLDER'], nome))
+    nome_original = secure_filename(img_file.filename) or 'imagem'
+    nome = f"{uuid.uuid4().hex[:8]}_{nome_original}"
+    destino = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], nome))
+    pasta_upload = os.path.abspath(app.config['UPLOAD_FOLDER'])
+    if os.path.commonpath([pasta_upload, destino]) != pasta_upload:
+        raise ValueError('Caminho de imagem inválido.')
+    img_file.save(destino)
     return f"/static/uploads/{nome}"
 
 
@@ -99,7 +190,7 @@ def _imagem_data_url_form():
 
 
 def _imagem_do_form(imagem_atual=''):
-    url_imagem = request.form.get('url_imagem', '').strip()
+    url_imagem = _normalizar_url_imagem(request.form.get('url_imagem', '').strip())
     imagem_data = _imagem_data_url_form()
     if imagem_data:
         return imagem_data
@@ -197,15 +288,47 @@ def _parse_data_filtro(valor):
         return None
 
 
+@app.before_request
+def proteger_requisicoes_post():
+    if request.method != 'POST':
+        return None
+
+    token_sessao = session.get('_csrf_token', '')
+    token_enviado = request.form.get('_csrf_token', '') or request.headers.get('X-CSRF-Token', '')
+    if not token_sessao or not token_enviado or not compare_digest(str(token_sessao), str(token_enviado)):
+        logger.warning("POST bloqueado por token CSRF inválido em %s", request.path)
+        abort(400, description='Recarregue a página e tente novamente.')
+    return None
+
+
 @app.after_request
 def aplicar_headers_basicos(response):
     response.headers.setdefault('X-Content-Type-Options', 'nosniff')
     response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
     response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    response.headers.setdefault('X-Frame-Options', 'DENY')
+    response.headers.setdefault('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
+    csp = [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
+        "img-src 'self' data: https:",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+    ]
+    if PRODUCAO:
+        csp.append('upgrade-insecure-requests')
+        response.headers.setdefault('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    response.headers.setdefault('Content-Security-Policy', '; '.join(csp))
     if request.path.startswith('/static/'):
         response.headers.setdefault('Cache-Control', 'public, max-age=31536000, immutable')
     elif request.path.startswith('/admin') or request.path in ('/login', '/meus-pontos'):
         response.headers.setdefault('Cache-Control', 'no-store')
+        response.headers.setdefault('X-Robots-Tag', 'noindex, nofollow')
     return response
 
 
@@ -213,8 +336,9 @@ def aplicar_headers_basicos(response):
 def variaveis_globais():
     return {
         'whatsapp_num': os.getenv('WHATSAPP_NUM', '5535999014589'),
-        'cache_bust': os.getenv('ASSET_VERSION', 'attack14'),
+        'cache_bust': os.getenv('ASSET_VERSION', 'attack15'),
         'ambiente_vercel': AMBIENTE_VERCEL,
+        'csrf_token': _csrf_token,
     }
 
 
@@ -229,6 +353,16 @@ def home():
     return render_template('index.html', produtos=produtos, categorias=categorias)
 
 
+@app.route('/politica-privacidade')
+def politica_privacidade():
+    return render_template('politica_privacidade.html')
+
+
+@app.route('/termos-de-uso')
+def termos_de_uso():
+    return render_template('termos_uso.html')
+
+
 @app.route('/healthz')
 def healthz():
     return {'status': 'ok', 'app': 'os-cobra-da-bola'}, 200
@@ -241,6 +375,12 @@ def consultar_pontos():
     if request.method == 'POST':
         telefone_buscado = request.form.get('telefone', '').strip()
         telefone_limpo = _telefone_limpo(telefone_buscado)
+        if not _rate_limit_ok('consulta-pontos', 30, 10 * 60):
+            flash('Muitas consultas em pouco tempo. Aguarde alguns minutos e tente novamente.', 'error')
+            return render_template('pontos.html',
+                                   resultado=resultado,
+                                   vendas=vendas,
+                                   telefone_buscado=telefone_buscado)
         if not _telefone_valido(telefone_limpo):
             flash('Informe um celular/WhatsApp válido com DDD.', 'error')
             return render_template('pontos.html',
@@ -262,7 +402,8 @@ def consultar_pontos():
                 if _telefone_limpo(telefone_venda) == telefone_limpo:
                     vendas.append(v)
         except Exception as e:
-            flash(f'Erro ao consultar pontos: {e}', 'error')
+            logger.exception("Erro ao consultar pontos")
+            flash(mensagem_erro_planilha(e, 'consultar pontos'), 'error')
 
     return render_template('pontos.html',
                            resultado=resultado,
@@ -280,8 +421,12 @@ def login():
         return redirect(url_for('painel'))
 
     if request.method == 'POST':
-        usuario = request.form.get('usuario', '').strip()
-        senha   = request.form.get('senha', '').strip()
+        usuario = _texto_curto(request.form.get('usuario', ''), 80)
+        senha   = str(request.form.get('senha', '') or '')[:200].strip()
+
+        if not _rate_limit_ok('login', 8, 15 * 60):
+            flash('Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente.', 'error')
+            return render_template('login.html')
 
         try:
             u = buscar_usuario(usuario)
@@ -290,6 +435,7 @@ def login():
                 autenticado = _senha_confere(senha_armazenada, senha)
 
                 if autenticado:
+                    session.clear()
                     session.permanent     = True
                     session['logado']     = True
                     session['usuario']    = usuario
@@ -340,22 +486,34 @@ def cadastrar():
     if redir: return redir
 
     if request.method == 'POST':
-        nome_produto    = request.form.get('nome_produto', '').strip()
-        categoria       = request.form.get('categoria', '').strip()
+        nome_produto    = _texto_curto(request.form.get('nome_produto', ''), 120)
+        categoria       = _texto_curto(request.form.get('categoria', ''), 50)
+        preco_compra    = parse_preco(request.form.get('preco_compra', ''))
         preco           = parse_preco(request.form.get('preco', ''))
         estoque         = parse_int(request.form.get('estoque', '0'))
-        tamanhos        = request.form.get('tamanhos', '').strip()
+        tamanhos        = _texto_curto(request.form.get('tamanhos', ''), 120)
         disponibilidade = request.form.get('disponibilidade', 'Pronta Entrega')
-        p_id_digitado   = request.form.get('id', '').strip()
+        p_id_digitado   = _texto_curto(request.form.get('id', ''), 40)
         fornecedor      = _fornecedor_sessao()
         if not fornecedor:
             return redirect(url_for('login'))
 
+        if disponibilidade not in ('Pronta Entrega', 'Sob Encomenda'):
+            disponibilidade = 'Pronta Entrega'
+        if p_id_digitado and not PRODUTO_ID_RE.fullmatch(p_id_digitado):
+            flash('Use no ID apenas letras, números, hífen e underline.', 'error')
+            return render_template('cadastro.html', form=request.form)
         if not nome_produto or not categoria:
             flash('Preencha nome e categoria do produto.', 'error')
             return render_template('cadastro.html', form=request.form)
+        if preco_compra <= 0:
+            flash('Informe um valor de compra válido maior que zero.', 'error')
+            return render_template('cadastro.html', form=request.form)
         if preco <= 0:
-            flash('Informe um preço válido maior que zero.', 'error')
+            flash('Informe um valor de venda válido maior que zero.', 'error')
+            return render_template('cadastro.html', form=request.form)
+        if preco_compra > 999999 or preco > 999999 or estoque > 9999:
+            flash('Revise os valores informados. Algum campo está acima do limite permitido.', 'error')
             return render_template('cadastro.html', form=request.form)
 
         try:
@@ -373,6 +531,7 @@ def cadastrar():
                 'id':              p_id,
                 'nome do produto': nome_produto,
                 'categoria':       categoria,
+                'preço de compra': round(preco_compra, 2),
                 'preço':           round(preco, 2),
                 'estoque':         estoque,
                 'url da imagem':   caminho_imagem,
@@ -412,18 +571,27 @@ def editar(produto_id):
             return redirect(url_for('painel'))
 
         if request.method == 'POST':
-            nome_produto    = request.form.get('nome_produto', '').strip()
-            categoria       = request.form.get('categoria', '').strip()
+            nome_produto    = _texto_curto(request.form.get('nome_produto', ''), 120)
+            categoria       = _texto_curto(request.form.get('categoria', ''), 50)
+            preco_compra    = parse_preco(request.form.get('preco_compra', ''))
             preco           = parse_preco(request.form.get('preco', ''))
             estoque         = parse_int(request.form.get('estoque', '0'))
-            tamanhos        = request.form.get('tamanhos', '').strip()
+            tamanhos        = _texto_curto(request.form.get('tamanhos', ''), 120)
             disponibilidade = request.form.get('disponibilidade', 'Pronta Entrega')
+            if disponibilidade not in ('Pronta Entrega', 'Sob Encomenda'):
+                disponibilidade = 'Pronta Entrega'
 
             if not nome_produto or not categoria:
                 flash('Preencha nome e categoria.', 'error')
                 return render_template('editar.html', produto=produto)
+            if preco_compra <= 0:
+                flash('Valor de compra inválido.', 'error')
+                return render_template('editar.html', produto=produto)
             if preco <= 0:
-                flash('Preço inválido.', 'error')
+                flash('Valor de venda inválido.', 'error')
+                return render_template('editar.html', produto=produto)
+            if preco_compra > 999999 or preco > 999999 or estoque > 9999:
+                flash('Revise os valores informados. Algum campo está acima do limite permitido.', 'error')
                 return render_template('editar.html', produto=produto)
 
             try:
@@ -435,6 +603,7 @@ def editar(produto_id):
             update_dict_row(aba, linha_idx, {
                 'nome do produto': nome_produto,
                 'categoria':       categoria,
+                'preço de compra': round(preco_compra, 2),
                 'preço':           round(preco, 2),
                 'estoque':         estoque,
                 'url da imagem':   caminho_imagem,
@@ -486,12 +655,12 @@ def registrar_venda():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        nome_cliente = request.form.get('nome_cliente', '').strip()
+        nome_cliente = _texto_curto(request.form.get('nome_cliente', ''), 80)
         telefone     = _telefone_limpo(request.form.get('telefone', ''))
-        id_produto   = request.form.get('id_produto', '').strip()
+        id_produto   = _texto_curto(request.form.get('id_produto', ''), 40)
         quantidade   = max(1, parse_int(request.form.get('quantidade', '1'), 1))
         valor        = parse_preco(request.form.get('valor', '0'))
-        obs          = request.form.get('obs', '').strip()
+        obs          = _texto_curto(request.form.get('obs', ''), 240)
 
         if not _telefone_valido(telefone):
             flash('Informe um celular/WhatsApp válido com DDD.', 'error')
@@ -501,6 +670,12 @@ def registrar_venda():
             return redirect(url_for('registrar_venda'))
         if not id_produto:
             flash('Selecione o produto vendido.', 'error')
+            return redirect(url_for('registrar_venda'))
+        if id_produto != 'OUTRO' and not PRODUTO_ID_RE.fullmatch(id_produto):
+            flash('Produto inválido.', 'error')
+            return redirect(url_for('registrar_venda'))
+        if quantidade > 999 or valor > 999999:
+            flash('Revise quantidade e valor da venda.', 'error')
             return redirect(url_for('registrar_venda'))
 
         try:
@@ -527,6 +702,10 @@ def registrar_venda():
             if valor <= 0:
                 flash('Informe um valor de venda válido.', 'error')
                 return redirect(url_for('registrar_venda'))
+
+            custo_unitario = produto_vendido['preco_compra_raw'] if produto_vendido else 0.0
+            custo_total = round(custo_unitario * quantidade, 2)
+            lucro = round(valor - custo_total, 2)
 
             # Regra de pontos: a partir de R$ 89, cada R$ 4,45 soma 1 ponto.
             pontos_ganhos = _calcular_pontos(valor)
@@ -575,6 +754,9 @@ def registrar_venda():
                 'obs':          obs,
                 'id_venda':     uuid.uuid4().hex[:8],
                 'quantidade':   quantidade,
+                'custo_unitario': round(custo_unitario, 2),
+                'custo_total':    custo_total,
+                'lucro':          lucro,
             }, VENDAS_HEADERS, VENDAS_ALIASES)
 
             flash(f'Venda registrada! +{pontos_ganhos} pontos para {nome_cliente or telefone}. ✓', 'success')
@@ -610,7 +792,11 @@ def relatorio():
     stats = {
         'entradas': 0.0,
         'entradas_fmt': '0,00',
-        'saidas': 0,
+        'saidas': 0.0,
+        'saidas_fmt': '0,00',
+        'lucro': 0.0,
+        'lucro_fmt': '0,00',
+        'itens': 0,
         'vendas': 0,
         'pontos': 0,
         'ticket_medio': '0,00',
@@ -625,7 +811,7 @@ def relatorio():
             plan = abrir_planilha()
             aba_v = garantir_aba(plan, 'vendas', VENDAS_HEADERS, VENDAS_ALIASES)
             produtos = buscar_produtos(fornecedor=fornecedor)
-            produtos_por_id = {p['id']: p['nome'] for p in produtos}
+            produtos_por_id = {p['id']: p for p in produtos}
 
             for venda in registros_da_aba(aba_v):
                 fornecedor_venda = valor_por_alias(venda, 'fornecedor', '', VENDAS_ALIASES)
@@ -641,7 +827,16 @@ def relatorio():
                 valor = parse_preco(valor_por_alias(venda, 'valor', 0, VENDAS_ALIASES))
                 quantidade = max(1, parse_int(valor_por_alias(venda, 'quantidade', 1, VENDAS_ALIASES), 1))
                 pontos = parse_int(valor_por_alias(venda, 'pontos', 0, VENDAS_ALIASES), 0)
-                produto_nome = produtos_por_id.get(id_produto, 'Outro / Serviço' if id_produto == 'OUTRO' else id_produto)
+                produto_ref = produtos_por_id.get(id_produto)
+                produto_nome = produto_ref['nome'] if produto_ref else ('Outro / Serviço' if id_produto == 'OUTRO' else id_produto)
+                custo_unitario = parse_preco(valor_por_alias(venda, 'custo_unitario', 0, VENDAS_ALIASES))
+                custo_total = parse_preco(valor_por_alias(venda, 'custo_total', 0, VENDAS_ALIASES))
+                if custo_total <= 0 and produto_ref:
+                    custo_unitario = custo_unitario or produto_ref.get('preco_compra_raw', 0)
+                    custo_total = round(custo_unitario * quantidade, 2)
+                lucro = parse_preco(valor_por_alias(venda, 'lucro', '', VENDAS_ALIASES))
+                if lucro == 0 and valor:
+                    lucro = round(valor - custo_total, 2)
 
                 item = {
                     'data_dt': data_venda,
@@ -652,6 +847,12 @@ def relatorio():
                     'produto': produto_nome,
                     'valor': valor,
                     'valor_fmt': formatar_preco(valor),
+                    'custo_unitario': custo_unitario,
+                    'custo_unitario_fmt': formatar_preco(custo_unitario),
+                    'custo_total': custo_total,
+                    'custo_total_fmt': formatar_preco(custo_total),
+                    'lucro': lucro,
+                    'lucro_fmt': formatar_preco(lucro),
                     'pontos': pontos,
                     'quantidade': quantidade,
                     'id_venda': valor_por_alias(venda, 'id_venda', '', VENDAS_ALIASES),
@@ -659,26 +860,36 @@ def relatorio():
                 vendas_filtradas.append(item)
 
                 stats['entradas'] += valor
-                stats['saidas'] += quantidade
+                stats['saidas'] += custo_total
+                stats['lucro'] += lucro
+                stats['itens'] += quantidade
                 stats['pontos'] += pontos
 
                 resumo = produtos_resumo.setdefault(id_produto, {
                     'produto': produto_nome,
                     'quantidade': 0,
                     'receita': 0.0,
+                    'custo': 0.0,
+                    'lucro': 0.0,
                     'vendas': 0,
                 })
                 resumo['quantidade'] += quantidade
                 resumo['receita'] += valor
+                resumo['custo'] += custo_total
+                resumo['lucro'] += lucro
                 resumo['vendas'] += 1
 
             vendas_filtradas.sort(key=lambda v: v['data_dt'], reverse=True)
             stats['vendas'] = len(vendas_filtradas)
             stats['entradas_fmt'] = formatar_preco(stats['entradas'])
+            stats['saidas_fmt'] = formatar_preco(stats['saidas'])
+            stats['lucro_fmt'] = formatar_preco(stats['lucro'])
             stats['ticket_medio'] = formatar_preco(stats['entradas'] / stats['vendas']) if stats['vendas'] else '0,00'
 
             for resumo in produtos_resumo.values():
                 resumo['receita_fmt'] = formatar_preco(resumo['receita'])
+                resumo['custo_fmt'] = formatar_preco(resumo['custo'])
+                resumo['lucro_fmt'] = formatar_preco(resumo['lucro'])
 
         except Exception as e:
             logger.exception("Erro ao gerar relatório")

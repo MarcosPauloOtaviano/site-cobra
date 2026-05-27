@@ -59,7 +59,7 @@
     }
     .field{margin-bottom:1.25rem}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-    @media(max-width:480px){.grid-2{grid-template-columns:1fr}}
+    @media(max-width:560px){body{padding:1rem .75rem}.card{padding:1.25rem}.grid-2{grid-template-columns:1fr}}
     label{display:block;font-size:.72rem;font-weight:700;color:var(--white-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:.4rem}
     input[type="text"],input[type="number"],input[type="file"],select{
       width:100%;padding:.75rem 1rem;background:var(--surface);border:1px solid var(--border-lit);
@@ -118,6 +118,7 @@
 
   <div class="card">
     <form method="POST" action="/admin/editar/{{ produto.id }}" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
       <div class="sec-title">Identificação</div>
       <div class="grid-2">
@@ -138,15 +139,25 @@
         <input type="text" name="nome_produto" required value="{{ produto.nome }}">
       </div>
 
-      <div class="sec-title">Preço e Estoque</div>
+      <div class="sec-title">Compra, Venda e Estoque</div>
       <div class="grid-2">
         <div class="field">
-          <label>Preço (R$)</label>
+          <label>Valor de Compra (R$)</label>
+          <input type="text" name="preco_compra" required inputmode="decimal" value="{{ produto.preco_compra }}">
+        </div>
+        <div class="field">
+          <label>Valor de Venda (R$)</label>
           <input type="text" name="preco" required inputmode="decimal" value="{{ produto.preco }}">
         </div>
+      </div>
+      <div class="grid-2">
         <div class="field">
           <label>Estoque (Qtd)</label>
           <input type="number" name="estoque" required value="{{ produto.estoque }}" min="0">
+        </div>
+        <div class="field">
+          <label>Balanço</label>
+          <input type="text" value="Lucro calculado automaticamente no relatório" disabled>
         </div>
       </div>
 

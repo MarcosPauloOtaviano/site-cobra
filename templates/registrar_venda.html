@@ -116,6 +116,7 @@
 
   <div class="card">
     <form action="/admin/lancar-venda" method="POST" id="venda-form">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
       <div class="sec-title">Dados do Cliente</div>
       <div class="grid-2">

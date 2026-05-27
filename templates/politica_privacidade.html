@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Política de Privacidade — Os Cobra da Bola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --ink:#06080a;--deep:#0a0e11;--surface:#111519;--card:#161b20;
+      --border:#232c35;--gold:#f5c518;--white:#eef2f5;--dim:#9aa6b4;--r:10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--deep);color:var(--white);font-family:'DM Sans',sans-serif;line-height:1.7}
+    header{background:rgba(6,8,10,.96);border-bottom:1px solid var(--border);padding:1rem;position:sticky;top:0;z-index:10}
+    .nav{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .brand{font-family:'Bebas Neue',cursive;color:var(--white);text-decoration:none;font-size:1.45rem;letter-spacing:3px}
+    .brand em{color:var(--gold);font-style:normal}
+    .nav a:not(.brand){color:var(--dim);text-decoration:none;font-size:.9rem}
+    .nav a:hover{color:var(--gold)}
+    main{max-width:980px;margin:0 auto;padding:3rem 1rem 4rem}
+    .hero{border:1px solid rgba(245,197,24,.18);background:linear-gradient(135deg,rgba(245,197,24,.09),rgba(255,255,255,.02));border-radius:var(--r);padding:2rem;margin-bottom:1rem}
+    h1,h2{font-family:'Bebas Neue',cursive;letter-spacing:2px;line-height:1;color:var(--white)}
+    h1{font-size:3rem;margin-bottom:.75rem}
+    h1 em,h2 em{color:var(--gold);font-style:normal}
+    h2{font-size:1.8rem;margin:2rem 0 .75rem}
+    p,li{color:var(--dim);font-size:.96rem}
+    ul{padding-left:1.2rem;display:grid;gap:.45rem}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-top:1rem}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+    strong{color:var(--white)}
+    a{color:var(--gold)}
+    .updated{font-size:.82rem;color:var(--dim);margin-top:.6rem}
+    footer{border-top:1px solid var(--border);padding:1.5rem 1rem;color:var(--dim);text-align:center}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}.nav{align-items:flex-start;flex-direction:column}h1{font-size:2.45rem}}
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cobra-refresh.css') }}?v={{ cache_bust }}">
+</head>
+<body>
+<header>
+  <div class="nav">
+    <a class="brand" href="/">OS <em>COBRA</em> DA BOLA</a>
+    <nav>
+      <a href="/">Vitrine</a>
+      <a href="/termos-de-uso" style="margin-left:1rem">Termos de Uso</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Política de <em>Privacidade</em></h1>
+    <p>
+      Este aviso explica quais dados usamos no site Os Cobra da Bola, por que o telefone é solicitado
+      e como protegemos as informações de clientes e fornecedores.
+    </p>
+    <p class="updated">Atualizado em 27 de maio de 2026.</p>
+  </section>
+
+  <section class="card">
+    <h2>Resumo direto</h2>
+    <p>
+      Não pedimos CPF para acumular pontos. Usamos o número de celular/WhatsApp como identificador
+      simples para vincular compras, atendimento pelo WhatsApp e saldo do clube de pontos.
+    </p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Dados que coletamos</h2>
+      <ul>
+        <li><strong>Cliente:</strong> nome, telefone/WhatsApp, itens do pedido, valor da compra e pontos gerados.</li>
+        <li><strong>Carrinho:</strong> itens salvos no navegador do próprio cliente para manter a sacola aberta.</li>
+        <li><strong>Fornecedor/admin:</strong> usuário, senha protegida por hash quando configurada, produtos, estoque, fotos, custos e vendas.</li>
+        <li><strong>Técnicos:</strong> dados básicos de acesso necessários para segurança, sessão e funcionamento do site.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Por que usamos telefone</h2>
+      <ul>
+        <li>Identificar o pedido enviado pelo WhatsApp.</li>
+        <li>Somar e consultar pontos sem exigir CPF.</li>
+        <li>Evitar cadastro duplicado no clube de pontos.</li>
+        <li>Permitir atendimento e confirmação de disponibilidade.</li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Finalidades</h2>
+    <p>
+      Tratamos dados para operar a vitrine, receber pedidos, registrar vendas, controlar estoque,
+      calcular pontos, gerar relatórios internos e manter a segurança do painel. Não usamos esses dados
+      para vender listas, disparar spam ou criar perfil sensível do cliente.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Compartilhamento</h2>
+    <p>
+      O pedido é aberto no WhatsApp quando o cliente escolhe finalizar a compra. A base operacional fica
+      em Google Sheets/Google Drive, e o site é hospedado na Vercel. Esses serviços recebem apenas o que
+      é necessário para funcionamento, hospedagem, organização de vendas e atendimento.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Segurança</h2>
+    <ul>
+      <li>O site usa sessão protegida, cookies HttpOnly e proteção contra envio indevido de formulários.</li>
+      <li>O painel do fornecedor é restrito por login.</li>
+      <li>O projeto evita CPF e mantém o telefone como identificador mínimo para pontos.</li>
+      <li>Imagens e links passam por validação antes de serem aceitos no painel.</li>
+      <li>Cabeçalhos de segurança ajudam a reduzir riscos de clique forçado, conteúdo indevido e vazamento por referência.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Direitos do titular</h2>
+    <p>
+      O cliente pode solicitar confirmação de tratamento, acesso, correção, atualização, bloqueio ou
+      exclusão dos seus dados, quando aplicável. Para isso, entre em contato pelo WhatsApp da loja:
+      <a href="https://wa.me/{{ whatsapp_num }}" rel="noopener">wa.me/{{ whatsapp_num }}</a>.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Guarda e exclusão</h2>
+    <p>
+      Os dados são mantidos pelo tempo necessário para atendimento, histórico de pontos, controle de vendas
+      e obrigações operacionais. Quando não forem mais necessários, podem ser removidos ou anonimizados,
+      respeitando solicitações do titular e necessidades legítimas de controle da loja.
+    </p>
+  </section>
+</main>
+
+<footer>
+  Os Cobra da Bola. Privacidade simples: menos dados, mais clareza.
+</footer>
+</body>
+</html>
