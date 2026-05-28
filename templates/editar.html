@@ -179,7 +179,9 @@
       </div>
       <div class="field">
         <label>Link permanente da imagem</label>
-        <input type="text" name="url_imagem" value="{{ produto.imagem }}" placeholder="https://...">
+        {% set imagem_link_atual = produto.imagem if produto.imagem and not produto.imagem.startswith('data:image/') and not produto.imagem.startswith('/static/uploads/') else '' %}
+        <input type="text" name="url_imagem" id="url-imagem" value="{{ imagem_link_atual }}" placeholder="https://...">
+        <p class="hint">Cole um link para trocar a foto. Se ficar em branco e nenhum arquivo for escolhido, a imagem atual será mantida.</p>
       </div>
 
       <button type="submit" class="btn btn-warn">✓ Salvar Alterações</button>
@@ -193,6 +195,7 @@
   const preview = document.getElementById('img-preview');
   const imageDataInput = document.getElementById('imagem-data');
   const imageStatus = document.getElementById('img-status');
+  const urlInput = document.getElementById('url-imagem');
   const form = document.querySelector('form');
 
   function setStatus(text, isError = false) {
@@ -253,6 +256,7 @@
     const file = input.files[0];
     imageDataInput.value = '';
     if (file) {
+      if (urlInput) urlInput.value = '';
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
       setStatus('Compactando imagem para envio...');
@@ -269,6 +273,17 @@
       setStatus(error.message, true);
     });
   });
+
+  if (urlInput) {
+    urlInput.addEventListener('input', () => {
+      if (!urlInput.value.trim()) return;
+      input.value = '';
+      imageDataInput.value = '';
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
+      setStatus('Link da imagem será usado neste produto.');
+    });
+  }
 
   form.addEventListener('submit', event => {
     if (input.files[0] && !imageDataInput.value) {

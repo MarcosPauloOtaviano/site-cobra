@@ -185,6 +185,7 @@
   const preview = document.getElementById('img-preview');
   const imageDataInput = document.getElementById('imagem-data');
   const imageStatus = document.getElementById('img-status');
+  const urlInput = document.getElementById('url-imagem');
   const form = document.querySelector('form');
 
   function setStatus(text, isError = false) {
@@ -245,6 +246,7 @@
     const file = input.files[0];
     imageDataInput.value = '';
     if (file) {
+      if (urlInput) urlInput.value = '';
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
       setStatus('Compactando imagem para envio...');
@@ -261,6 +263,17 @@
       setStatus(error.message, true);
     });
   });
+
+  if (urlInput) {
+    urlInput.addEventListener('input', () => {
+      if (!urlInput.value.trim()) return;
+      input.value = '';
+      imageDataInput.value = '';
+      preview.removeAttribute('src');
+      preview.style.display = 'none';
+      setStatus('Link da imagem será usado neste produto.');
+    });
+  }
 
   form.addEventListener('submit', event => {
     if (input.files[0] && !imageDataInput.value) {

@@ -192,15 +192,19 @@ def _imagem_data_url_form():
 
 
 def _imagem_do_form(imagem_atual=''):
-    url_imagem = _normalizar_url_imagem(request.form.get('url_imagem', '').strip())
-    imagem_data = _imagem_data_url_form()
+    url_imagem = _normalizar_url_imagem(str(request.form.get('url_imagem', '') or '').strip())
+    try:
+        imagem_data = _imagem_data_url_form()
+    except ValueError:
+        if url_imagem:
+            return url_imagem
+        raise
     if imagem_data:
         return imagem_data
-    if AMBIENTE_VERCEL and url_imagem:
+    if url_imagem:
         return url_imagem
     return (
         _salvar_imagem(request.files.get('imagem'))
-        or url_imagem
         or imagem_atual
     )
 
@@ -276,11 +280,35 @@ def _parse_data_planilha(valor):
     texto = str(valor or '').strip()
     if not texto:
         return None
+
+    texto_numero = texto.replace(',', '.')
+    if re.fullmatch(r'\d+(?:\.\d+)?', texto_numero):
+        try:
+            serial = float(texto_numero)
+            if 20000 <= serial <= 80000:
+                return datetime(1899, 12, 30) + timedelta(days=serial)
+        except ValueError:
+            pass
+
+    texto_iso = texto.replace('Z', '+00:00')
+    try:
+        return datetime.fromisoformat(texto_iso).replace(tzinfo=None)
+    except ValueError:
+        pass
+
     for formato in (
         '%d/%m/%Y %H:%M',
         '%d/%m/%Y %H:%M:%S',
+        '%d/%m/%y %H:%M',
+        '%d/%m/%y',
         '%d/%m/%Y',
+        '%d-%m-%Y %H:%M',
+        '%d-%m-%Y',
+        '%d-%m-%y',
+        '%m/%d/%Y %H:%M',
+        '%m/%d/%Y',
         '%Y-%m-%d %H:%M',
+        '%Y-%m-%d %H:%M:%S',
         '%Y-%m-%d',
     ):
         try:
@@ -718,16 +746,35 @@ def registrar_venda():
 
             # Regra de pontos: a partir de R$ 89, cada R$ 4,45 soma 1 ponto.
             pontos_ganhos = _calcular_pontos(valor)
+            id_venda = uuid.uuid4().hex[:8]
+
+            # Registra a venda antes das demais alterações para o relatório nunca ficar zerado
+            # quando a baixa de estoque ou a pontuação encontrar uma falha temporária da planilha.
+            append_dict_row(aba_v, {
+                'data':         datetime.now().strftime('%d/%m/%Y %H:%M'),
+                'telefone':     telefone,
+                'nome_cliente': nome_cliente,
+                'id_produto':   id_produto,
+                'valor':        round(valor, 2),
+                'pontos':       pontos_ganhos,
+                'fornecedor':   fornecedor,
+                'obs':          obs,
+                'id_venda':     id_venda,
+                'quantidade':   quantidade,
+                'custo_unitario': round(custo_unitario, 2),
+                'custo_total':    custo_total,
+                'lucro':          lucro,
+            }, VENDAS_HEADERS, VENDAS_ALIASES)
 
             # Atualiza ou cria registro de pontos
             encontrado = False
             for i, r in enumerate(registros_da_aba(aba_p)):
                 telefone_registro = valor_por_alias(r, 'telefone', '', PONTOS_ALIASES)
                 if _telefone_limpo(telefone_registro) == telefone:
-                    novo_pts   = parse_int(r.get('total_pontos', 0)) + pontos_ganhos
-                    novo_gasto = parse_preco(r.get('total_gasto', 0)) + valor
+                    novo_pts   = parse_int(valor_por_alias(r, 'total_pontos', 0, PONTOS_ALIASES), 0) + pontos_ganhos
+                    novo_gasto = parse_preco(valor_por_alias(r, 'total_gasto', 0, PONTOS_ALIASES)) + valor
                     update_dict_row(aba_p, i + 2, {
-                        'nome':        nome_cliente or r.get('nome', ''),
+                        'nome':        nome_cliente or valor_por_alias(r, 'nome', '', PONTOS_ALIASES),
                         'telefone':    telefone,
                         'total_pontos': novo_pts,
                         'total_gasto':  round(novo_gasto, 2),
@@ -750,23 +797,6 @@ def registrar_venda():
                     'estoque':    produto_vendido['estoque'] - quantidade,
                     'fornecedor': fornecedor,
                 }, PRODUTO_HEADERS, PRODUTO_ALIASES)
-
-            # Registro da venda
-            append_dict_row(aba_v, {
-                'data':         datetime.now().strftime('%d/%m/%Y %H:%M'),
-                'telefone':     telefone,
-                'nome_cliente': nome_cliente,
-                'id_produto':   id_produto,
-                'valor':        round(valor, 2),
-                'pontos':       pontos_ganhos,
-                'fornecedor':   fornecedor,
-                'obs':          obs,
-                'id_venda':     uuid.uuid4().hex[:8],
-                'quantidade':   quantidade,
-                'custo_unitario': round(custo_unitario, 2),
-                'custo_total':    custo_total,
-                'lucro':          lucro,
-            }, VENDAS_HEADERS, VENDAS_ALIASES)
 
             flash(f'Venda registrada! +{pontos_ganhos} pontos para {nome_cliente or telefone}. ✓', 'success')
             return redirect(url_for('registrar_venda'))
@@ -820,7 +850,8 @@ def relatorio():
             plan = abrir_planilha()
             aba_v = garantir_aba(plan, 'vendas', VENDAS_HEADERS, VENDAS_ALIASES)
             produtos = buscar_produtos(fornecedor=fornecedor)
-            produtos_por_id = {p['id']: p for p in produtos}
+            produtos_por_id = {p['id']: p for p in buscar_produtos()}
+            produtos_por_id.update({p['id']: p for p in produtos})
 
             for venda in registros_da_aba(aba_v):
                 fornecedor_venda = valor_por_alias(venda, 'fornecedor', '', VENDAS_ALIASES)
@@ -835,9 +866,13 @@ def relatorio():
                 id_produto = str(valor_por_alias(venda, 'id_produto', '', VENDAS_ALIASES) or 'OUTRO')
                 valor = parse_preco(valor_por_alias(venda, 'valor', 0, VENDAS_ALIASES))
                 quantidade = max(1, parse_int(valor_por_alias(venda, 'quantidade', 1, VENDAS_ALIASES), 1))
-                pontos = parse_int(valor_por_alias(venda, 'pontos', 0, VENDAS_ALIASES), 0)
                 produto_ref = produtos_por_id.get(id_produto)
                 produto_nome = produto_ref['nome'] if produto_ref else ('Outro / Serviço' if id_produto == 'OUTRO' else id_produto)
+                if valor <= 0 and produto_ref:
+                    valor = round(produto_ref.get('preco_raw', 0) * quantidade, 2)
+                pontos = parse_int(valor_por_alias(venda, 'pontos', 0, VENDAS_ALIASES), 0)
+                if pontos <= 0 and valor:
+                    pontos = _calcular_pontos(valor)
                 custo_unitario = parse_preco(valor_por_alias(venda, 'custo_unitario', 0, VENDAS_ALIASES))
                 custo_total = parse_preco(valor_por_alias(venda, 'custo_total', 0, VENDAS_ALIASES))
                 if custo_total <= 0 and produto_ref:

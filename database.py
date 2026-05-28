@@ -14,7 +14,7 @@ import unicodedata
 import gspread
 from dotenv import load_dotenv
 from flask import g, has_request_context
-from gspread.utils import InsertDataOption, ValueInputOption
+from gspread.utils import InsertDataOption, ValueInputOption, rowcol_to_a1
 from oauth2client.service_account import ServiceAccountCredentials
 
 load_dotenv()
@@ -46,7 +46,7 @@ PRODUTO_ALIASES = {
     'preço':           ['preço', 'preco', 'valor'],
     'preço de compra': ['preço de compra', 'preco de compra', 'valor de compra', 'valor_compra', 'preco_compra', 'custo', 'custo_unitario'],
     'estoque':         ['estoque', 'qtd', 'quantidade'],
-    'url da imagem':   ['url da imagem', 'imagem', 'foto', 'url_imagem'],
+    'url da imagem':   ['url da imagem', 'imagem', 'foto', 'url_imagem', 'link da imagem', 'imagem_url', 'foto_url', 'arquivo_imagem', 'imagem_data'],
     'tamanhos':        ['tamanhos', 'tamanho'],
     'disponibilidade': ['disponibilidade', 'status'],
     'fornecedor':      ['fornecedor', 'nome_fornecedor'],
@@ -65,18 +65,18 @@ VENDAS_HEADERS = [
     'custo_total', 'lucro',
 ]
 VENDAS_ALIASES = {
-    'data':         ['data', 'data_venda'],
+    'data':         ['data', 'data_venda', 'data da venda', 'dt_venda', 'vendido_em'],
     'telefone':     ['telefone', 'celular', 'whatsapp', 'whats'],
     'nome_cliente': ['nome_cliente', 'nome', 'cliente'],
-    'id_produto':   ['id_produto', 'produto_id', 'id'],
-    'valor':        ['valor', 'preço', 'preco', 'total'],
+    'id_produto':   ['id_produto', 'produto_id', 'id', 'produto', 'produto vendido'],
+    'valor':        ['valor', 'preço', 'preco', 'total', 'valor_venda', 'valor da venda', 'entrada', 'receita', 'venda'],
     'pontos':       ['pontos', 'pts'],
-    'fornecedor':   ['fornecedor', 'nome_fornecedor'],
+    'fornecedor':   ['fornecedor', 'nome_fornecedor', 'vendedor', 'fornecedor responsável'],
     'obs':          ['obs', 'observacao', 'observação'],
     'id_venda':     ['id_venda', 'venda_id'],
     'quantidade':   ['quantidade', 'qtd'],
-    'custo_unitario': ['custo_unitario', 'custo unitario', 'custo unitário', 'preco_compra', 'preço de compra'],
-    'custo_total':    ['custo_total', 'custo total', 'saida', 'saída', 'valor_compra_total'],
+    'custo_unitario': ['custo_unitario', 'custo unitario', 'custo unitário', 'preco_compra', 'preço de compra', 'valor de compra', 'custo de compra'],
+    'custo_total':    ['custo_total', 'custo total', 'saida', 'saída', 'valor_compra_total', 'valor de compra total', 'total compra'],
     'lucro':          ['lucro', 'saldo', 'resultado'],
 }
 USUARIO_HEADERS = ['usuario', 'senha_hash', 'nome_fornecedor']
@@ -299,18 +299,27 @@ def append_dict_row(aba, dados, cabecalhos, aliases=None):
         linha,
         value_input_option=ValueInputOption.user_entered,
         insert_data_option=InsertDataOption.insert_rows,
-        table_range='A1',
+        table_range=f'A1:{rowcol_to_a1(1, len(headers))}',
     )
     _invalidar_cache(aba)
 
 
 def update_dict_row(aba, numero_linha, dados, cabecalhos, aliases=None):
     headers = garantir_cabecalhos(aba, cabecalhos, aliases)
+    updates = []
     for campo, valor in dados.items():
         col = indice_coluna(headers, campo, aliases)
         if col:
-            aba.update_cell(numero_linha, col, valor)
-    _invalidar_cache(aba)
+            updates.append({
+                'range': rowcol_to_a1(numero_linha, col),
+                'values': [[valor]],
+            })
+    if updates:
+        aba.batch_update(
+            updates,
+            value_input_option=ValueInputOption.user_entered,
+        )
+        _invalidar_cache(aba)
 
 # ─────────────────────────────────────────────────────────────────
 #  FORMATAÇÃO DE PREÇO
