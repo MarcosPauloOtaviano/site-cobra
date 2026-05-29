@@ -106,16 +106,17 @@ def _credenciais_env():
     return None
 
 
-def conectar_sheets():
-    """Retorna um cliente gspread autenticado via service account."""
-    escopos = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
+GOOGLE_ESCOPOS = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
+
+
+def obter_credenciais_google():
+    """Retorna credenciais Google reutilizáveis para Sheets e Drive."""
     credenciais_env = _credenciais_env()
     if credenciais_env:
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(credenciais_env, escopos)
-        return gspread.authorize(creds)
+        return ServiceAccountCredentials.from_json_keyfile_dict(credenciais_env, GOOGLE_ESCOPOS)
 
     arquivo_json = (
         os.getenv('ARQUIVO_CREDENCIAIS')
@@ -129,7 +130,12 @@ def conectar_sheets():
             "Credenciais do Google não encontradas. No deploy, configure "
             "GOOGLE_CREDENTIALS_JSON com o JSON da service account."
         )
-    creds = ServiceAccountCredentials.from_json_keyfile_name(arquivo_json, escopos)
+    return ServiceAccountCredentials.from_json_keyfile_name(arquivo_json, GOOGLE_ESCOPOS)
+
+
+def conectar_sheets():
+    """Retorna um cliente gspread autenticado via service account."""
+    creds = obter_credenciais_google()
     return gspread.authorize(creds)
 
 

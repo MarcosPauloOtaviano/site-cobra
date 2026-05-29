@@ -162,7 +162,7 @@
       <div class="section-title">Foto do Produto</div>
       <div class="field">
         <label>Upload da Imagem (JPG, PNG, WEBP)</label>
-        <input type="file" name="imagem" accept="image/*" id="img-input" />
+        <input type="file" name="imagem" accept="image/jpeg,image/png,image/webp,image/gif" id="img-input" />
         <input type="hidden" name="imagem_data" id="imagem-data" />
         <img id="img-preview" class="file-preview" alt="Pré-visualização" />
         <p class="hint" id="img-status">Opcional. A foto do aparelho é compactada antes de salvar para funcionar no site online. Tamanho máximo: 8 MB.</p>
@@ -187,6 +187,10 @@
   const imageStatus = document.getElementById('img-status');
   const urlInput = document.getElementById('url-imagem');
   const form = document.querySelector('form');
+  const MAX_DIRECT_UPLOAD = 6 * 1024 * 1024;
+  const MAX_SOURCE_IMAGE = 15 * 1024 * 1024;
+  let pendingRequiredCompression = null;
+  let imageSelectionToken = 0;
 
   function setStatus(text, isError = false) {
     if (!imageStatus) return;
@@ -203,6 +207,14 @@
     });
   }
 
+  function isHeic(file) {
+    return /image\/hei(c|f)/i.test(file.type || '') || /\.(hei(c|f))$/i.test(file.name || '');
+  }
+
+  function isSupportedImage(file) {
+    return /^image\/(jpeg|png|webp|gif)$/i.test(file.type || '') || /\.(jpe?g|png|webp|gif)$/i.test(file.name || '');
+  }
+
   function canvasDataUrl(canvas, quality) {
     const webp = canvas.toDataURL('image/webp', quality);
     if (webp.startsWith('data:image/webp')) return webp;
@@ -211,8 +223,9 @@
 
   async function compactImage(file) {
     if (!file) return '';
-    if (!file.type.startsWith('image/')) throw new Error('Selecione uma imagem válida.');
-    if (file.size > 8 * 1024 * 1024) throw new Error('Imagem acima de 8 MB. Escolha uma foto menor.');
+    if (isHeic(file)) throw new Error('Fotos HEIC/HEIF não abrem na vitrine. No celular, escolha JPG/PNG ou use "Mais compatível" na câmera.');
+    if (!isSupportedImage(file)) throw new Error('Selecione uma imagem JPG, PNG, WEBP ou GIF.');
+    if (file.size > MAX_SOURCE_IMAGE) throw new Error('Imagem acima de 15 MB. Escolha uma foto menor.');
 
     const img = await loadImage(file);
     const attempts = [
@@ -243,20 +256,43 @@
   }
 
   async function prepareImage() {
+    const token = ++imageSelectionToken;
+    pendingRequiredCompression = null;
     const file = input.files[0];
     imageDataInput.value = '';
     if (file) {
+      if (isHeic(file)) throw new Error('Fotos HEIC/HEIF não abrem na vitrine. No celular, escolha JPG/PNG ou use "Mais compatível" na câmera.');
+      if (!isSupportedImage(file)) throw new Error('Selecione uma imagem JPG, PNG, WEBP ou GIF.');
       if (urlInput) urlInput.value = '';
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
-      setStatus('Compactando imagem para envio...');
-      imageDataInput.value = await compactImage(file);
-      setStatus('Imagem pronta para salvar.');
+      if (file.size > MAX_DIRECT_UPLOAD) {
+        setStatus('Compactando imagem grande para envio...');
+        pendingRequiredCompression = compactImage(file).then(dataUrl => {
+          if (token !== imageSelectionToken) return;
+          imageDataInput.value = dataUrl;
+          input.value = '';
+          setStatus('Imagem compactada e pronta para salvar.');
+        });
+        await pendingRequiredCompression;
+        pendingRequiredCompression = null;
+        return;
+      }
+
+      setStatus('Foto pronta para salvar. No online ela será enviada para o Drive.');
+      compactImage(file)
+        .then(dataUrl => {
+          if (token === imageSelectionToken && input.files[0] === file && !(urlInput && urlInput.value.trim())) {
+            imageDataInput.value = dataUrl;
+          }
+        })
+        .catch(() => {});
     }
   }
 
   input.addEventListener('change', () => {
     prepareImage().catch(error => {
+      pendingRequiredCompression = null;
       input.value = '';
       preview.style.display = 'none';
       imageDataInput.value = '';
@@ -267,6 +303,8 @@
   if (urlInput) {
     urlInput.addEventListener('input', () => {
       if (!urlInput.value.trim()) return;
+      imageSelectionToken += 1;
+      pendingRequiredCompression = null;
       input.value = '';
       imageDataInput.value = '';
       preview.removeAttribute('src');
@@ -276,11 +314,14 @@
   }
 
   form.addEventListener('submit', event => {
-    if (input.files[0] && !imageDataInput.value) {
+    if (pendingRequiredCompression) {
       event.preventDefault();
-      prepareImage()
+      pendingRequiredCompression
         .then(() => form.requestSubmit())
-        .catch(error => setStatus(error.message, true));
+        .catch(error => {
+          pendingRequiredCompression = null;
+          setStatus(error.message, true);
+        });
     }
   });
 </script>

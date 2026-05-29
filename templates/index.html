@@ -48,6 +48,7 @@
   </style>
 </head>
 <body class="lookbook-page">
+  {% set hero_products = produtos[:6] %}
   {% with msgs = get_flashed_messages(with_categories=true) %}
     {% if msgs %}
       <div class="flash-stack" aria-live="polite">
@@ -128,7 +129,7 @@
       </span>
     </a>
 
-    <nav class="main-nav" aria-label="Navegacao principal">
+    <nav class="main-nav" aria-label="Navegação principal">
       <a href="#vitrine">
         <span class="nav-full">Vitrine</span>
         <span class="nav-short">Vitrine</span>
@@ -167,25 +168,109 @@
   </div>
 
   <main>
-    <section class="hero-section">
+    <section class="hero-section hero-drop-carousel retail-hero" {% if hero_products %}data-hero-carousel{% endif %}>
       <div class="hero-copy">
-        <span class="eyebrow">Guaxupe, MG / Drop de ataque</span>
+        <span class="eyebrow">Os Cobra da Bola / Performance Store</span>
         <h1>Veste quem tem a senha</h1>
         <p>
-          Vista o jogo. Ataque a rua. Roupa esportiva com presença pesada, contraste alto e compra direta pelo WhatsApp.
+          Drop de jogo. Presença de rua. Peça esportiva com foto grande, pronta entrega selecionada e compra direta pelo WhatsApp.
         </p>
+        {% if hero_products %}
+          <div class="hero-live-product retail-scoreboard" aria-live="polite">
+            <div>
+              <span data-hero-category>{{ hero_products[0].categoria or 'Produto' }}</span>
+              <strong data-hero-name>{{ hero_products[0].nome }}</strong>
+            </div>
+            <small data-hero-price>R$ {{ hero_products[0].preco }}</small>
+          </div>
+        {% endif %}
         <div class="hero-actions">
-          <a href="#vitrine" class="primary-link">Ver colecao</a>
+          <button type="button" class="primary-link" data-hero-view-product {% if hero_products %}data-product-id="{{ hero_products[0].id }}"{% endif %}>
+            Ver no catálogo
+          </button>
           <button type="button" class="secondary-link" data-open-cart>Ver sacola</button>
         </div>
       </div>
+
+      {% if hero_products %}
+        <div class="hero-carousel-stage">
+          <div class="hero-orbit" aria-hidden="true"></div>
+          <div class="hero-reel" aria-hidden="true">
+            <div class="hero-reel-track">
+              {% for p in hero_products %}
+                {% if p.imagem %}
+                  <img src="{{ p.imagem }}" alt="" loading="lazy" />
+                {% endif %}
+              {% endfor %}
+              {% for p in hero_products %}
+                {% if p.imagem %}
+                  <img src="{{ p.imagem }}" alt="" loading="lazy" />
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          <div class="hero-slider-viewport">
+            {% for p in hero_products %}
+              <article
+                class="hero-slide {% if loop.first %}is-active{% endif %}"
+                data-hero-slide
+                data-product-id="{{ p.id }}"
+                data-name="{{ p.nome }}"
+                data-category="{{ p.categoria or 'Produto' }}"
+                data-price="R$ {{ p.preco }}"
+                style="--slide-index: {{ loop.index0 }};"
+              >
+                <div class="hero-slide-media">
+                  {% if p.imagem %}
+                    <img src="{{ p.imagem }}" alt="{{ p.nome }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}" />
+                  {% else %}
+                    <div class="product-image-empty">Sem foto</div>
+                  {% endif %}
+                </div>
+                <div class="hero-slide-card">
+                  <span>{{ p.categoria or 'Produto' }}</span>
+                  <strong>{{ p.nome }}</strong>
+                  <small>R$ {{ p.preco }}</small>
+                </div>
+              </article>
+            {% endfor %}
+          </div>
+
+          <div class="hero-carousel-controls" aria-label="Produtos em destaque">
+            <button type="button" class="hero-arrow" data-hero-prev aria-label="Produto anterior">‹</button>
+            <div class="hero-dots">
+              {% for p in hero_products %}
+                <button
+                  type="button"
+                  class="hero-dot {% if loop.first %}is-active{% endif %}"
+                  data-hero-dot
+                  data-hero-index="{{ loop.index0 }}"
+                  aria-label="Ver {{ p.nome }}"
+                  {% if loop.first %}aria-current="true"{% endif %}
+                >
+                  {% if p.imagem %}
+                    <img src="{{ p.imagem }}" alt="" loading="lazy" />
+                  {% else %}
+                    <span>{{ loop.index }}</span>
+                  {% endif %}
+                </button>
+              {% endfor %}
+            </div>
+            <button type="button" class="hero-arrow" data-hero-next aria-label="Próximo produto">›</button>
+          </div>
+
+          <div class="hero-progress" aria-hidden="true">
+            <span data-hero-progress></span>
+          </div>
+        </div>
+      {% endif %}
     </section>
 
-    <section class="collection-section" id="vitrine">
+    <section class="collection-section retail-collection" id="vitrine">
       <div class="collection-heading">
         <div>
-          <span class="eyebrow">Vitrine</span>
-          <h2>Drop em campo</h2>
+          <span class="eyebrow">Catálogo Cobra</span>
+          <h2>Escolha a camisa</h2>
           <p>{{ produtos|length }} produto{% if produtos|length != 1 %}s{% endif %} prontos para entrar no pedido.</p>
         </div>
         <div class="filter-bar" aria-label="Filtrar produtos por categoria">
@@ -202,6 +287,7 @@
             {% set tam_lista = p.tamanhos.split(',') | map('trim') | reject('equalto','') | list if p.tamanhos else [] %}
             <article
               class="product-card {% if loop.index == 1 %}product-card-featured{% endif %}"
+              style="--card-order: {{ loop.index0 }};"
               data-product-card
               data-category="{{ p.categoria }}"
               data-product-id="{{ p.id }}"
@@ -749,6 +835,120 @@
       });
     }
 
+    function initHeroCarousel() {
+      const root = document.querySelector('[data-hero-carousel]');
+      if (!root) return;
+
+      const slides = Array.from(root.querySelectorAll('[data-hero-slide]'));
+      const dots = Array.from(root.querySelectorAll('[data-hero-dot]'));
+      const nameEl = root.querySelector('[data-hero-name]');
+      const categoryEl = root.querySelector('[data-hero-category]');
+      const priceEl = root.querySelector('[data-hero-price]');
+      const progressEl = root.querySelector('[data-hero-progress]');
+      const viewButton = root.querySelector('[data-hero-view-product]');
+      const intervalMs = 2850;
+      let current = 0;
+      let timer = null;
+
+      if (!slides.length) return;
+
+      function updateLiveText(slide) {
+        if (nameEl) nameEl.textContent = slide.dataset.name || '';
+        if (categoryEl) categoryEl.textContent = slide.dataset.category || 'Produto';
+        if (priceEl) priceEl.textContent = slide.dataset.price || '';
+        if (viewButton) viewButton.dataset.productId = slide.dataset.productId || '';
+      }
+
+      function restartProgress() {
+        if (!progressEl) return;
+        progressEl.style.animation = 'none';
+        void progressEl.offsetWidth;
+        progressEl.style.animation = `heroBannerProgress ${intervalMs}ms linear forwards`;
+      }
+
+      function setSlide(nextIndex) {
+        current = (nextIndex + slides.length) % slides.length;
+        slides.forEach((slide, index) => {
+          slide.classList.toggle('is-active', index === current);
+          slide.classList.toggle('is-before', index === (current - 1 + slides.length) % slides.length);
+          slide.classList.toggle('is-after', index === (current + 1) % slides.length);
+        });
+        dots.forEach((dot, index) => {
+          const active = index === current;
+          dot.classList.toggle('is-active', active);
+          dot.setAttribute('aria-current', active ? 'true' : 'false');
+        });
+        root.style.setProperty('--hero-slide', current);
+        updateLiveText(slides[current]);
+        restartProgress();
+      }
+
+      function startAuto() {
+        if (slides.length < 2 || timer) return;
+        timer = setInterval(() => setSlide(current + 1), intervalMs);
+        restartProgress();
+      }
+
+      function stopAuto() {
+        if (!timer) return;
+        clearInterval(timer);
+        timer = null;
+      }
+
+      function resetAuto() {
+        stopAuto();
+        startAuto();
+      }
+
+      function spotlightProduct(id) {
+        const card = getCardById(id);
+        if (!card) {
+          document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.remove('is-spotlighted');
+        void card.offsetWidth;
+        card.classList.add('is-spotlighted');
+        setTimeout(() => card.classList.remove('is-spotlighted'), 1800);
+      }
+
+      root.addEventListener('click', event => {
+        const dot = event.target.closest('[data-hero-dot]');
+        if (dot) {
+          setSlide(parseInt(dot.dataset.heroIndex, 10) || 0);
+          resetAuto();
+          return;
+        }
+
+        if (event.target.closest('[data-hero-prev]')) {
+          setSlide(current - 1);
+          resetAuto();
+          return;
+        }
+
+        if (event.target.closest('[data-hero-next]')) {
+          setSlide(current + 1);
+          resetAuto();
+          return;
+        }
+
+        const view = event.target.closest('[data-hero-view-product]');
+        if (view) {
+          spotlightProduct(view.dataset.productId);
+          return;
+        }
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stopAuto();
+        else startAuto();
+      });
+
+      setSlide(0);
+      startAuto();
+    }
+
     document.addEventListener('click', event => {
       const sizeButton = event.target.closest('[data-size-option]');
       if (sizeButton) {
@@ -828,6 +1028,7 @@
     repairBrokenImages();
     setTimeout(repairBrokenImages, 800);
     syncAllButtons();
+    initHeroCarousel();
   </script>
 </body>
 </html>

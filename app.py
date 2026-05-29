@@ -12,11 +12,14 @@ import uuid
 import logging
 import re
 import time
+import json
 from hmac import compare_digest
 from secrets import token_urlsafe
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, timedelta
-from urllib.parse import urlparse
+from urllib import request as urllib_request
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlparse
 
 from dotenv import load_dotenv
 from flask import (Flask, abort, flash, redirect, render_template,
@@ -37,6 +40,7 @@ from database import (
     buscar_usuario,
     fornecedor_permitido, valor_por_alias,
     mensagem_erro_planilha,
+    obter_credenciais_google,
 )
 
 # ─────────────────────────────────────────────────────────────────
@@ -62,9 +66,10 @@ EXTENSOES_OK     = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 DATA_IMAGE_RE    = re.compile(r'^data:image/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=\s]+$')
 PRODUTO_ID_RE    = re.compile(r'^[A-Za-z0-9_-]{1,40}$')
 _RATE_LIMITS     = {}
+MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 
 app.config['UPLOAD_FOLDER']      = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
+app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_BYTES
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = PRODUCAO
@@ -77,8 +82,13 @@ if not AMBIENTE_VERCEL:
 #  HELPERS LOCAIS
 # ─────────────────────────────────────────────────────────────────
 
-def _extensao_ok(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in EXTENSOES_OK
+def _modo_upload_drive():
+    modo = os.getenv('IMAGE_UPLOAD_BACKEND', '').strip().lower()
+    if modo in ('drive', 'google_drive', 'google-drive'):
+        return True
+    if modo in ('local', 'static', 'filesystem'):
+        return False
+    return AMBIENTE_VERCEL
 
 
 def _texto_curto(valor, limite=120):
@@ -118,21 +128,129 @@ def _csrf_token():
     return token
 
 
-def _assinatura_imagem_ok(img_file):
+def _assinatura_imagem(img_file):
     try:
         posicao = img_file.stream.tell()
         img_file.stream.seek(0)
-        cabecalho = img_file.stream.read(16)
+        cabecalho = img_file.stream.read(32)
         img_file.stream.seek(posicao)
     except Exception:
-        return False
+        return None
 
-    return (
-        cabecalho.startswith(b'\x89PNG\r\n\x1a\n')
-        or cabecalho.startswith(b'\xff\xd8\xff')
-        or cabecalho.startswith((b'GIF87a', b'GIF89a'))
-        or (cabecalho.startswith(b'RIFF') and cabecalho[8:12] == b'WEBP')
+    if cabecalho.startswith(b'\x89PNG\r\n\x1a\n'):
+        return 'png', 'image/png'
+    if cabecalho.startswith(b'\xff\xd8\xff'):
+        return 'jpg', 'image/jpeg'
+    if cabecalho.startswith((b'GIF87a', b'GIF89a')):
+        return 'gif', 'image/gif'
+    if cabecalho.startswith(b'RIFF') and cabecalho[8:12] == b'WEBP':
+        return 'webp', 'image/webp'
+    return None
+
+
+def _ler_upload_bytes(img_file):
+    try:
+        img_file.stream.seek(0)
+        conteudo = img_file.stream.read()
+        img_file.stream.seek(0)
+    except Exception as exc:
+        raise ValueError('Não foi possível ler a imagem enviada.') from exc
+
+    if not conteudo:
+        raise ValueError('A imagem enviada está vazia.')
+    if len(conteudo) > MAX_UPLOAD_BYTES:
+        raise ValueError('Imagem acima de 8 MB. Escolha uma foto menor ou aguarde a compactação no celular.')
+    return conteudo
+
+
+def _nome_seguro_imagem(filename, ext):
+    nome_original = secure_filename(filename or '')
+    base, extensao_atual = os.path.splitext(nome_original)
+    base = (base or 'produto')[:70]
+    ext_final = (extensao_atual[1:].lower() if extensao_atual else ext).lower()
+    if ext_final == 'jpeg':
+        ext_final = 'jpg'
+    if ext_final not in EXTENSOES_OK:
+        ext_final = ext
+    return f"{uuid.uuid4().hex[:10]}_{base}.{ext_final}"
+
+
+def _google_access_token():
+    try:
+        return obter_credenciais_google().get_access_token().access_token
+    except Exception as exc:
+        raise ValueError('Não foi possível autenticar o envio de imagem no Google Drive.') from exc
+
+
+def _drive_json_request(url, token, payload):
+    dados = json.dumps(payload).encode('utf-8')
+    req = urllib_request.Request(
+        url,
+        data=dados,
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json; charset=UTF-8',
+        },
+        method='POST',
     )
+    with urllib_request.urlopen(req, timeout=25) as resp:
+        corpo = resp.read().decode('utf-8') or '{}'
+        return json.loads(corpo)
+
+
+def _upload_imagem_drive(conteudo, nome, mime_type):
+    token = _google_access_token()
+    pasta_id = (
+        os.getenv('GOOGLE_DRIVE_IMAGE_FOLDER_ID')
+        or os.getenv('DRIVE_IMAGE_FOLDER_ID')
+        or os.getenv('IMAGES_DRIVE_FOLDER_ID')
+    )
+    metadata = {'name': nome, 'mimeType': mime_type}
+    if pasta_id:
+        metadata['parents'] = [pasta_id]
+
+    boundary = f"cobra_{uuid.uuid4().hex}"
+    corpo = b''.join([
+        f"--{boundary}\r\n".encode('utf-8'),
+        b"Content-Type: application/json; charset=UTF-8\r\n\r\n",
+        json.dumps(metadata).encode('utf-8'),
+        b"\r\n",
+        f"--{boundary}\r\n".encode('utf-8'),
+        f"Content-Type: {mime_type}\r\n\r\n".encode('utf-8'),
+        conteudo,
+        b"\r\n",
+        f"--{boundary}--\r\n".encode('utf-8'),
+    ])
+    req = urllib_request.Request(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        data=corpo,
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Content-Type': f'multipart/related; boundary={boundary}',
+            'Content-Length': str(len(corpo)),
+        },
+        method='POST',
+    )
+    try:
+        with urllib_request.urlopen(req, timeout=35) as resp:
+            resposta = json.loads(resp.read().decode('utf-8') or '{}')
+        file_id = resposta.get('id')
+        if not file_id:
+            raise ValueError('O Google Drive não retornou o ID da imagem.')
+
+        _drive_json_request(
+            f"https://www.googleapis.com/drive/v3/files/{quote(file_id)}/permissions?fields=id",
+            token,
+            {'role': 'reader', 'type': 'anyone'},
+        )
+        return f"https://drive.google.com/thumbnail?id={quote(file_id)}&sz=w1200"
+    except HTTPError as exc:
+        detalhe = exc.read().decode('utf-8', errors='ignore')[:500]
+        logger.warning("Falha no upload da imagem para o Drive: %s", detalhe)
+        raise ValueError('Não consegui salvar a foto no Google Drive. Tente novamente ou use um link da imagem.') from exc
+    except (URLError, TimeoutError, ValueError) as exc:
+        logger.warning("Falha no upload da imagem para o Drive: %s", exc)
+        raise ValueError('Não consegui salvar a foto no Google Drive. Tente novamente ou use um link da imagem.') from exc
 
 
 def _normalizar_url_imagem(url_imagem):
@@ -163,20 +281,24 @@ def _salvar_imagem(img_file):
     """Salva upload e retorna o path relativo, ou '' se não houver arquivo."""
     if not img_file or not img_file.filename:
         return ''
-    if not _extensao_ok(img_file.filename):
-        raise ValueError('Use uma imagem nos formatos PNG, JPG, JPEG, GIF ou WEBP.')
-    if not _assinatura_imagem_ok(img_file):
-        raise ValueError('O arquivo enviado não parece ser uma imagem válida.')
-    if AMBIENTE_VERCEL:
-        raise ValueError('No site online, aguarde a compactação da imagem antes de salvar. Se persistir, tente uma foto menor.')
 
-    nome_original = secure_filename(img_file.filename) or 'imagem'
-    nome = f"{uuid.uuid4().hex[:8]}_{nome_original}"
+    assinatura = _assinatura_imagem(img_file)
+    if not assinatura:
+        raise ValueError('Use uma imagem JPG, PNG, WEBP ou GIF. Fotos HEIC/HEIF do celular precisam ser convertidas para JPG.')
+    ext, mime_type = assinatura
+    conteudo = _ler_upload_bytes(img_file)
+    nome = _nome_seguro_imagem(img_file.filename, ext)
+
+    if _modo_upload_drive():
+        return _upload_imagem_drive(conteudo, nome, mime_type)
+
     destino = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], nome))
     pasta_upload = os.path.abspath(app.config['UPLOAD_FOLDER'])
     if os.path.commonpath([pasta_upload, destino]) != pasta_upload:
         raise ValueError('Caminho de imagem inválido.')
-    img_file.save(destino)
+    os.makedirs(pasta_upload, exist_ok=True)
+    with open(destino, 'wb') as arquivo:
+        arquivo.write(conteudo)
     return f"/static/uploads/{nome}"
 
 
@@ -199,14 +321,22 @@ def _imagem_do_form(imagem_atual=''):
         if url_imagem:
             return url_imagem
         raise
+    try:
+        imagem_arquivo = _salvar_imagem(request.files.get('imagem'))
+    except ValueError:
+        if imagem_data:
+            logger.info("Upload de arquivo falhou; usando imagem compactada do formulário.")
+            return imagem_data
+        if url_imagem:
+            return url_imagem
+        raise
+    if imagem_arquivo:
+        return imagem_arquivo
     if imagem_data:
         return imagem_data
     if url_imagem:
         return url_imagem
-    return (
-        _salvar_imagem(request.files.get('imagem'))
-        or imagem_atual
-    )
+    return imagem_atual
 
 
 def _login_requerido():
