@@ -501,9 +501,10 @@ def aplicar_headers_basicos(response):
 
 @app.context_processor
 def variaveis_globais():
+    asset_version = os.getenv('ASSET_VERSION', 'attack15')
     return {
         'whatsapp_num': _whatsapp_numero_loja(),
-        'cache_bust': os.getenv('ASSET_VERSION', 'attack15'),
+        'cache_bust': f'{asset_version}-cinema2',
         'ambiente_vercel': AMBIENTE_VERCEL,
         'csrf_token': _csrf_token,
     }
