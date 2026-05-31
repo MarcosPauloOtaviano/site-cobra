@@ -175,7 +175,7 @@
         <input type="file" name="imagem" accept="image/jpeg,image/png,image/webp,image/gif" id="img-input" />
         <input type="hidden" name="imagem_data" id="imagem-data" />
         <img id="img-preview" class="file-preview" alt="Nova imagem" />
-        <p class="hint" id="img-status">Deixe em branco para manter a imagem atual. A foto do aparelho é compactada antes de salvar no site online.</p>
+        <p class="hint" id="img-status">Deixe em branco para manter a imagem atual. A foto do aparelho é compactada antes de salvar no site online. Tamanho máximo: 15 MB.</p>
       </div>
       <div class="field">
         <label>Link permanente da imagem</label>
@@ -197,7 +197,6 @@
   const imageStatus = document.getElementById('img-status');
   const urlInput = document.getElementById('url-imagem');
   const form = document.querySelector('form');
-  const MAX_DIRECT_UPLOAD = 6 * 1024 * 1024;
   const MAX_SOURCE_IMAGE = 15 * 1024 * 1024;
   let pendingRequiredCompression = null;
   let imageSelectionToken = 0;
@@ -276,27 +275,16 @@
       if (urlInput) urlInput.value = '';
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'block';
-      if (file.size > MAX_DIRECT_UPLOAD) {
-        setStatus('Compactando imagem grande para envio...');
-        pendingRequiredCompression = compactImage(file).then(dataUrl => {
-          if (token !== imageSelectionToken) return;
-          imageDataInput.value = dataUrl;
-          input.value = '';
-          setStatus('Imagem compactada e pronta para salvar.');
-        });
-        await pendingRequiredCompression;
-        pendingRequiredCompression = null;
-        return;
-      }
-
-      setStatus('Foto pronta para salvar. No online ela será enviada para o Drive.');
-      compactImage(file)
-        .then(dataUrl => {
-          if (token === imageSelectionToken && input.files[0] === file && !(urlInput && urlInput.value.trim())) {
-            imageDataInput.value = dataUrl;
-          }
-        })
-        .catch(() => {});
+      setStatus('Compactando imagem para envio...');
+      pendingRequiredCompression = compactImage(file).then(dataUrl => {
+        if (token !== imageSelectionToken) return;
+        imageDataInput.value = dataUrl;
+        input.value = '';
+        setStatus('Imagem pronta para salvar no site online.');
+      }).finally(() => {
+        if (token === imageSelectionToken) pendingRequiredCompression = null;
+      });
+      await pendingRequiredCompression;
     }
   }
 
@@ -332,6 +320,11 @@
           pendingRequiredCompression = null;
           setStatus(error.message, true);
         });
+    } else if (input.files[0] && !imageDataInput.value) {
+      event.preventDefault();
+      prepareImage()
+        .then(() => form.requestSubmit())
+        .catch(error => setStatus(error.message, true));
     }
   });
 </script>

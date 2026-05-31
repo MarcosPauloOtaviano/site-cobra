@@ -321,21 +321,18 @@ def _imagem_do_form(imagem_atual=''):
         if url_imagem:
             return url_imagem
         raise
+    if imagem_data:
+        return imagem_data
+    if url_imagem:
+        return url_imagem
     try:
         imagem_arquivo = _salvar_imagem(request.files.get('imagem'))
     except ValueError:
-        if imagem_data:
-            logger.info("Upload de arquivo falhou; usando imagem compactada do formulário.")
-            return imagem_data
         if url_imagem:
             return url_imagem
         raise
     if imagem_arquivo:
         return imagem_arquivo
-    if imagem_data:
-        return imagem_data
-    if url_imagem:
-        return url_imagem
     return imagem_atual
 
 
