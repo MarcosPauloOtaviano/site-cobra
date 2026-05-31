@@ -28,6 +28,7 @@ from flask import (Flask, Response, abort, flash, redirect, render_template,
                    request, session, url_for)
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
+from gspread.utils import InsertDataOption, ValueInputOption, rowcol_to_a1
 
 # ── Importa tudo do módulo de banco de dados ──────────────────────
 from database import (
@@ -223,14 +224,21 @@ def _salvar_imagem_planilha(conteudo, mime_type):
 
     plan = abrir_planilha()
     aba = garantir_aba(plan, NOME_ABA_IMAGENS, IMAGEM_HEADERS)
-    linha = {
+    dados = {
         'id': image_id,
         'mime_type': mime_type,
         'criado_em': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
     for indice, parte in enumerate(partes, start=1):
-        linha[f'parte_{indice:03d}'] = parte
-    append_dict_row(aba, linha, IMAGEM_HEADERS)
+        dados[f'parte_{indice:03d}'] = parte
+
+    linha = [dados.get(header, '') for header in IMAGEM_HEADERS]
+    aba.append_row(
+        linha,
+        value_input_option=ValueInputOption.raw,
+        insert_data_option=InsertDataOption.insert_rows,
+        table_range=f'A1:{rowcol_to_a1(1, len(IMAGEM_HEADERS))}',
+    )
 
     _IMAGEM_CACHE[image_id] = {
         'expira_em': time.time() + 3600,
