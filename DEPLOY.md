@@ -17,10 +17,11 @@ Nunca publique `.env`, `credenciais.json` ou JSON real de service account no Git
 - `WHATSAPP_NUM`: número usado no botão de compra, no formato internacional sem `+`.
 - `SHEETS_CACHE_SECONDS`: cache curto da vitrine. Padrão: `30`.
 - `ASSET_VERSION`: versão de cache do CSS. Padrão: `attack15`.
+- `IMAGE_UPLOAD_BACKEND`: deixe em branco para usar o padrão. Na Vercel, as imagens são salvas em partes na própria planilha.
 
 ## Imagens de produto
 
-Na Vercel, o filesystem da função não é persistente. Por isso, o painel compacta a foto no navegador antes do envio e salva a imagem como data URL na planilha, dentro do limite do Google Sheets. Links externos continuam funcionando normalmente.
+Na Vercel, o filesystem da função não é persistente. Por isso, o painel compacta a foto no navegador antes do envio e o backend salva a imagem em partes na aba `Imagens` do Google Sheets. O produto guarda apenas um link interno `/imagem/...`, e a vitrine carrega a foto por esse link. Links externos continuam funcionando normalmente.
 
 Os arquivos em `public/static/` são servidos como assets públicos pela Vercel.
 

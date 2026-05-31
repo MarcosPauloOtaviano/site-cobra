@@ -13,6 +13,8 @@ import logging
 import re
 import time
 import json
+import base64
+import binascii
 from hmac import compare_digest
 from secrets import token_urlsafe
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -22,7 +24,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 
 from dotenv import load_dotenv
-from flask import (Flask, abort, flash, redirect, render_template,
+from flask import (Flask, Response, abort, flash, redirect, render_template,
                    request, session, url_for)
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
@@ -62,11 +64,21 @@ app.secret_key = secret_key or 'cobra_secreta_mude_em_producao'
 
 DIRETORIO_ATUAL  = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER    = os.path.join(DIRETORIO_ATUAL, 'static', 'uploads')
-EXTENSOES_OK     = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-DATA_IMAGE_RE    = re.compile(r'^data:image/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=\s]+$')
+EXTENSOES_OK     = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'heic', 'heif'}
+DATA_IMAGE_RE    = re.compile(r'^data:image/(png|jpe?g|webp|gif);base64,([A-Za-z0-9+/=\s]+)$')
 PRODUTO_ID_RE    = re.compile(r'^[A-Za-z0-9_-]{1,40}$')
 _RATE_LIMITS     = {}
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
+MAX_DATA_IMAGE_CHARS = 2_000_000
+NOME_ABA_IMAGENS = 'Imagens'
+IMAGEM_CHUNK_SIZE = 45000
+IMAGEM_CHUNK_COLS = 120
+IMAGEM_HEADERS = (
+    ['id', 'mime_type', 'criado_em']
+    + [f'parte_{i:03d}' for i in range(1, IMAGEM_CHUNK_COLS + 1)]
+)
+IMAGEM_ID_RE = re.compile(r'^[a-f0-9]{24,40}$')
+_IMAGEM_CACHE = {}
 
 app.config['UPLOAD_FOLDER']      = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_BYTES
@@ -87,6 +99,15 @@ def _modo_upload_drive():
     if modo in ('drive', 'google_drive', 'google-drive'):
         return True
     if modo in ('local', 'static', 'filesystem'):
+        return False
+    return False
+
+
+def _modo_upload_planilha():
+    modo = os.getenv('IMAGE_UPLOAD_BACKEND', '').strip().lower()
+    if modo in ('sheets', 'sheet', 'google_sheets', 'google-sheets', 'planilha'):
+        return True
+    if modo in ('drive', 'google_drive', 'google-drive', 'local', 'static', 'filesystem'):
         return False
     return AMBIENTE_VERCEL
 
@@ -145,6 +166,10 @@ def _assinatura_imagem(img_file):
         return 'gif', 'image/gif'
     if cabecalho.startswith(b'RIFF') and cabecalho[8:12] == b'WEBP':
         return 'webp', 'image/webp'
+    if len(cabecalho) >= 12 and cabecalho[4:8] == b'ftyp':
+        marcas = cabecalho[8:32].lower()
+        if any(marca in marcas for marca in (b'heic', b'heix', b'hevc', b'hevx', b'heif', b'mif1', b'msf1')):
+            return 'heic', 'image/heic'
     return None
 
 
@@ -173,6 +198,54 @@ def _nome_seguro_imagem(filename, ext):
     if ext_final not in EXTENSOES_OK:
         ext_final = ext
     return f"{uuid.uuid4().hex[:10]}_{base}.{ext_final}"
+
+
+def _salvar_bytes_local(conteudo, nome):
+    destino = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], nome))
+    pasta_upload = os.path.abspath(app.config['UPLOAD_FOLDER'])
+    if os.path.commonpath([pasta_upload, destino]) != pasta_upload:
+        raise ValueError('Caminho de imagem inválido.')
+    os.makedirs(pasta_upload, exist_ok=True)
+    with open(destino, 'wb') as arquivo:
+        arquivo.write(conteudo)
+    return f"/static/uploads/{nome}"
+
+
+def _salvar_imagem_planilha(conteudo, mime_type):
+    image_id = uuid.uuid4().hex
+    base64_imagem = base64.b64encode(conteudo).decode('ascii')
+    partes = [
+        base64_imagem[i:i + IMAGEM_CHUNK_SIZE]
+        for i in range(0, len(base64_imagem), IMAGEM_CHUNK_SIZE)
+    ]
+    if len(partes) > IMAGEM_CHUNK_COLS:
+        raise ValueError('A imagem ficou pesada para salvar online. Tente uma foto menor ou recorte a imagem.')
+
+    plan = abrir_planilha()
+    aba = garantir_aba(plan, NOME_ABA_IMAGENS, IMAGEM_HEADERS)
+    linha = {
+        'id': image_id,
+        'mime_type': mime_type,
+        'criado_em': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+    for indice, parte in enumerate(partes, start=1):
+        linha[f'parte_{indice:03d}'] = parte
+    append_dict_row(aba, linha, IMAGEM_HEADERS)
+
+    _IMAGEM_CACHE[image_id] = {
+        'expira_em': time.time() + 3600,
+        'conteudo': conteudo,
+        'mime_type': mime_type,
+    }
+    return f'/imagem/{image_id}'
+
+
+def _salvar_bytes_imagem(conteudo, nome, mime_type):
+    if _modo_upload_drive():
+        return _upload_imagem_drive(conteudo, nome, mime_type)
+    if _modo_upload_planilha():
+        return _salvar_imagem_planilha(conteudo, mime_type)
+    return _salvar_bytes_local(conteudo, nome)
 
 
 def _google_access_token():
@@ -272,6 +345,12 @@ def _normalizar_url_imagem(url_imagem):
         return url_sem_quebra
 
     parsed = urlparse(url_sem_quebra)
+    if url_sem_quebra.startswith('/imagem/'):
+        image_id = url_sem_quebra.rsplit('/', 1)[-1]
+        if not IMAGEM_ID_RE.fullmatch(image_id):
+            raise ValueError('Caminho de imagem inválido.')
+        return url_sem_quebra
+
     if parsed.scheme not in ('http', 'https') or not parsed.netloc:
         raise ValueError('Use um link de imagem começando com http:// ou https://.')
     return url_sem_quebra
@@ -289,24 +368,37 @@ def _salvar_imagem(img_file):
     conteudo = _ler_upload_bytes(img_file)
     nome = _nome_seguro_imagem(img_file.filename, ext)
 
-    if _modo_upload_drive():
-        return _upload_imagem_drive(conteudo, nome, mime_type)
+    return _salvar_bytes_imagem(conteudo, nome, mime_type)
 
-    destino = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], nome))
-    pasta_upload = os.path.abspath(app.config['UPLOAD_FOLDER'])
-    if os.path.commonpath([pasta_upload, destino]) != pasta_upload:
-        raise ValueError('Caminho de imagem inválido.')
-    os.makedirs(pasta_upload, exist_ok=True)
-    with open(destino, 'wb') as arquivo:
-        arquivo.write(conteudo)
-    return f"/static/uploads/{nome}"
+
+def _salvar_imagem_data_url(imagem_data):
+    match = DATA_IMAGE_RE.match(imagem_data)
+    if not match:
+        raise ValueError('A imagem enviada pelo navegador não parece válida. Tente selecionar a foto novamente.')
+
+    ext = match.group(1).lower()
+    if ext == 'jpeg':
+        ext = 'jpg'
+    mime_type = 'image/jpeg' if ext in ('jpg', 'jpeg') else f'image/{ext}'
+    try:
+        conteudo = base64.b64decode(re.sub(r'\s+', '', match.group(2)), validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError('A imagem enviada pelo navegador não pôde ser lida. Tente selecionar a foto novamente.') from exc
+
+    if not conteudo:
+        raise ValueError('A imagem enviada está vazia.')
+    if len(conteudo) > MAX_UPLOAD_BYTES:
+        raise ValueError('A imagem compactada ficou pesada demais. Tente uma foto menor.')
+
+    nome = _nome_seguro_imagem(f'produto.{ext}', ext)
+    return _salvar_bytes_imagem(conteudo, nome, mime_type)
 
 
 def _imagem_data_url_form():
     imagem_data = str(request.form.get('imagem_data', '') or '').strip()
     if not imagem_data:
         return ''
-    if len(imagem_data) > 50000:
+    if len(imagem_data) > MAX_DATA_IMAGE_CHARS:
         raise ValueError('A imagem compactada ainda ficou pesada. Tente uma foto menor ou cole um link da imagem.')
     if not DATA_IMAGE_RE.match(imagem_data):
         raise ValueError('A imagem enviada pelo navegador não parece válida. Tente selecionar a foto novamente.')
@@ -322,7 +414,7 @@ def _imagem_do_form(imagem_atual=''):
             return url_imagem
         raise
     if imagem_data:
-        return imagem_data
+        return _salvar_imagem_data_url(imagem_data)
     if url_imagem:
         return url_imagem
     try:
@@ -511,11 +603,56 @@ def variaveis_globais():
 #  ÁREA PÚBLICA
 # ═══════════════════════════════════════════════════════════════
 
+def _carregar_imagem_planilha(image_id):
+    agora = time.time()
+    cache = _IMAGEM_CACHE.get(image_id)
+    if cache and cache.get('expira_em', 0) > agora:
+        return cache['conteudo'], cache['mime_type']
+
+    plan = abrir_planilha()
+    aba = garantir_aba(plan, NOME_ABA_IMAGENS, IMAGEM_HEADERS)
+    for row in registros_da_aba(aba):
+        if str(row.get('id', '')).strip() != image_id:
+            continue
+
+        mime_type = str(row.get('mime_type', '') or 'image/jpeg').strip()
+        base64_imagem = ''.join(
+            str(row.get(f'parte_{indice:03d}', '') or '').strip()
+            for indice in range(1, IMAGEM_CHUNK_COLS + 1)
+        )
+        if not base64_imagem:
+            raise ValueError('Imagem sem conteúdo.')
+        conteudo = base64.b64decode(base64_imagem, validate=True)
+        _IMAGEM_CACHE[image_id] = {
+            'expira_em': agora + 3600,
+            'conteudo': conteudo,
+            'mime_type': mime_type,
+        }
+        return conteudo, mime_type
+
+    raise FileNotFoundError('Imagem não encontrada.')
+
+
 @app.route('/')
 def home():
     produtos   = buscar_produtos()
     categorias = sorted({p['categoria'] for p in produtos if p['categoria']}, key=str.lower)
     return render_template('index.html', produtos=produtos, categorias=categorias)
+
+
+@app.route('/imagem/<image_id>')
+def imagem_produto(image_id):
+    if not IMAGEM_ID_RE.fullmatch(str(image_id or '')):
+        abort(404)
+    try:
+        conteudo, mime_type = _carregar_imagem_planilha(image_id)
+    except Exception:
+        logger.exception("Erro ao carregar imagem %s", image_id)
+        abort(404)
+
+    resposta = Response(conteudo, mimetype=mime_type)
+    resposta.headers['Cache-Control'] = 'public, max-age=86400'
+    return resposta
 
 
 @app.route('/politica-privacidade')

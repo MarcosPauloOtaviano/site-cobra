@@ -161,8 +161,8 @@
 
       <div class="section-title">Foto do Produto</div>
       <div class="field">
-        <label>Upload da Imagem (JPG, PNG, WEBP)</label>
-        <input type="file" name="imagem" accept="image/jpeg,image/png,image/webp,image/gif" id="img-input" />
+        <label>Upload da Imagem (JPG, PNG, WEBP, HEIC)</label>
+        <input type="file" name="imagem" accept="image/*" id="img-input" />
         <input type="hidden" name="imagem_data" id="imagem-data" />
         <img id="img-preview" class="file-preview" alt="Pré-visualização" />
         <p class="hint" id="img-status">Opcional. A foto do aparelho é compactada antes de salvar para funcionar no site online. Tamanho máximo: 15 MB.</p>
@@ -187,9 +187,12 @@
   const imageStatus = document.getElementById('img-status');
   const urlInput = document.getElementById('url-imagem');
   const form = document.querySelector('form');
+  const MAX_DIRECT_UPLOAD = 4 * 1024 * 1024;
   const MAX_SOURCE_IMAGE = 15 * 1024 * 1024;
+  const MAX_DATA_URL_LENGTH = 1200000;
   let pendingRequiredCompression = null;
   let imageSelectionToken = 0;
+  let directFileReady = false;
 
   function setStatus(text, isError = false) {
     if (!imageStatus) return;
@@ -248,19 +251,28 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       best = canvasDataUrl(canvas, quality);
-      if (best.length <= 48000) return best;
+      if (best.length <= MAX_DATA_URL_LENGTH) return best;
     }
 
-    throw new Error('A foto ficou pesada para a tabela. Tente recortar a imagem ou usar um link.');
+    throw new Error('A foto ficou pesada para enviar. Tente recortar a imagem ou usar um link.');
   }
 
   async function prepareImage() {
     const token = ++imageSelectionToken;
     pendingRequiredCompression = null;
+    directFileReady = false;
     const file = input.files[0];
     imageDataInput.value = '';
     if (file) {
-      if (isHeic(file)) throw new Error('Fotos HEIC/HEIF não abrem na vitrine. No celular, escolha JPG/PNG ou use "Mais compatível" na câmera.');
+      if (isHeic(file)) {
+        if (file.size > MAX_DIRECT_UPLOAD) throw new Error('Foto HEIC acima de 4 MB. No celular, escolha JPG/PNG ou use "Mais compatível" na câmera.');
+        if (urlInput) urlInput.value = '';
+        preview.removeAttribute('src');
+        preview.style.display = 'none';
+        directFileReady = true;
+        setStatus('Foto HEIC pronta para envio. No online ela será salva como link da imagem.');
+        return;
+      }
       if (!isSupportedImage(file)) throw new Error('Selecione uma imagem JPG, PNG, WEBP ou GIF.');
       if (urlInput) urlInput.value = '';
       preview.src = URL.createObjectURL(file);
@@ -270,7 +282,16 @@
         if (token !== imageSelectionToken) return;
         imageDataInput.value = dataUrl;
         input.value = '';
+        directFileReady = false;
         setStatus('Imagem pronta para salvar no site online.');
+      }).catch(error => {
+        if (token === imageSelectionToken && file.size <= MAX_DIRECT_UPLOAD) {
+          directFileReady = true;
+          imageDataInput.value = '';
+          setStatus('Não consegui compactar, mas vou enviar o arquivo original.');
+          return;
+        }
+        throw error;
       }).finally(() => {
         if (token === imageSelectionToken) pendingRequiredCompression = null;
       });
@@ -281,6 +302,7 @@
   input.addEventListener('change', () => {
     prepareImage().catch(error => {
       pendingRequiredCompression = null;
+      directFileReady = false;
       input.value = '';
       preview.style.display = 'none';
       imageDataInput.value = '';
@@ -293,6 +315,7 @@
       if (!urlInput.value.trim()) return;
       imageSelectionToken += 1;
       pendingRequiredCompression = null;
+      directFileReady = false;
       input.value = '';
       imageDataInput.value = '';
       preview.removeAttribute('src');
@@ -310,7 +333,7 @@
           pendingRequiredCompression = null;
           setStatus(error.message, true);
         });
-    } else if (input.files[0] && !imageDataInput.value) {
+    } else if (input.files[0] && !imageDataInput.value && !directFileReady) {
       event.preventDefault();
       prepareImage()
         .then(() => form.requestSubmit())
