@@ -5218,6 +5218,27 @@ body.lookbook-page::before {
   object-fit: cover;
 }
 
+.lookbook-page .hero-dot {
+  display: grid;
+  place-items: center;
+}
+
+.lookbook-page .hero-dot span {
+  font-family: "Montserrat", Arial, sans-serif;
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+@supports (content-visibility: auto) {
+  .lookbook-page .collection-section,
+  .lookbook-page .loyalty-section,
+  .lookbook-page .site-footer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1600px;
+  }
+}
+
 .lookbook-page .hero-progress {
   position: absolute;
   left: 50%;

@@ -27,13 +27,15 @@ DIRETORIO_ATUAL    = os.path.dirname(os.path.abspath(__file__))
 NOME_PLANILHA      = "site-cobra"
 NOME_ABA_PRODUTOS  = "Loja"
 _PRODUTOS_CACHE = {'expira_em': 0.0, 'produtos': None}
+_SHEETS_CLIENTE_CACHE = None
+_PLANILHA_CACHE = {'chave': None, 'planilha': None}
 
 
 def _cache_segundos():
     try:
-        return max(0, int(os.getenv('SHEETS_CACHE_SECONDS', '30') or 30))
+        return max(0, int(os.getenv('SHEETS_CACHE_SECONDS', '180') or 180))
     except (TypeError, ValueError):
-        return 30
+        return 180
 
 PRODUTO_HEADERS = [
     'id', 'nome do produto', 'categoria', 'preço de compra', 'preço', 'estoque',
@@ -135,8 +137,13 @@ def obter_credenciais_google():
 
 def conectar_sheets():
     """Retorna um cliente gspread autenticado via service account."""
+    global _SHEETS_CLIENTE_CACHE
+    if _SHEETS_CLIENTE_CACHE is not None:
+        return _SHEETS_CLIENTE_CACHE
+
     creds = obter_credenciais_google()
-    return gspread.authorize(creds)
+    _SHEETS_CLIENTE_CACHE = gspread.authorize(creds)
+    return _SHEETS_CLIENTE_CACHE
 
 
 def abrir_planilha():
@@ -145,10 +152,18 @@ def abrir_planilha():
         or os.getenv('GOOGLE_SHEET_ID')
         or os.getenv('SPREADSHEET_ID')
     )
+    chave_cache = planilha_id or NOME_PLANILHA
+    if _PLANILHA_CACHE.get('chave') == chave_cache and _PLANILHA_CACHE.get('planilha') is not None:
+        return _PLANILHA_CACHE['planilha']
+
     cliente = conectar_sheets()
     if planilha_id:
-        return cliente.open_by_key(planilha_id)
-    return cliente.open(NOME_PLANILHA)
+        planilha = cliente.open_by_key(planilha_id)
+    else:
+        planilha = cliente.open(NOME_PLANILHA)
+    _PLANILHA_CACHE['chave'] = chave_cache
+    _PLANILHA_CACHE['planilha'] = planilha
+    return planilha
 
 
 def obter_aba_produtos(planilha):

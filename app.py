@@ -590,6 +590,12 @@ def aplicar_headers_basicos(response):
     response.headers.setdefault('Content-Security-Policy', '; '.join(csp))
     if request.path.startswith('/static/'):
         response.headers.setdefault('Cache-Control', 'public, max-age=31536000, immutable')
+    elif (
+        request.path == '/'
+        and request.method == 'GET'
+        and not request.cookies.get(app.config.get('SESSION_COOKIE_NAME', 'session'))
+    ):
+        response.headers.setdefault('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600')
     elif request.path.startswith('/admin') or request.path in ('/login', '/meus-pontos'):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex, nofollow')
@@ -659,7 +665,9 @@ def imagem_produto(image_id):
         abort(404)
 
     resposta = Response(conteudo, mimetype=mime_type)
-    resposta.headers['Cache-Control'] = 'public, max-age=86400'
+    resposta.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    resposta.set_etag(image_id)
+    resposta.make_conditional(request)
     return resposta
 
 
@@ -676,6 +684,13 @@ def termos_de_uso():
 @app.route('/healthz')
 def healthz():
     return {'status': 'ok', 'app': 'os-cobra-da-bola'}, 200
+
+
+@app.route('/favicon.ico')
+def favicon():
+    resposta = redirect(url_for('static', filename='img/logo-cobra-bola.jpg'), code=302)
+    resposta.headers['Cache-Control'] = 'public, max-age=86400'
+    return resposta
 
 
 @app.route('/meus-pontos', methods=['GET', 'POST'])
