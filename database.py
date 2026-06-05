@@ -33,9 +33,9 @@ _PLANILHA_CACHE = {'chave': None, 'planilha': None}
 
 def _cache_segundos():
     try:
-        return max(0, int(os.getenv('SHEETS_CACHE_SECONDS', '180') or 180))
+        return max(0, int(os.getenv('SHEETS_CACHE_SECONDS', '60') or 60))
     except (TypeError, ValueError):
-        return 180
+        return 60
 
 PRODUTO_HEADERS = [
     'id', 'nome do produto', 'categoria', 'preço de compra', 'preço', 'estoque',
@@ -442,7 +442,31 @@ def _copiar_produtos(produtos):
     return [dict(produto) for produto in produtos]
 
 
-def buscar_produtos(fornecedor=None):
+def _chave_dedupe_produto(produto):
+    imagem = str(produto.get('imagem') or '').strip()
+    base = (
+        normalizar_chave(produto.get('nome')),
+        normalizar_chave(produto.get('categoria')),
+        normalizar_chave(produto.get('fornecedor')),
+    )
+    if imagem:
+        return base + (imagem,)
+    return base + (str(produto.get('preco_raw') or ''),)
+
+
+def _deduplicar_produtos(produtos):
+    vistos = set()
+    unicos = []
+    for produto in produtos:
+        chave = _chave_dedupe_produto(produto)
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        unicos.append(produto)
+    return unicos
+
+
+def buscar_produtos(fornecedor=None, deduplicar=False):
     """Retorna lista de produtos normalizados, opcionalmente filtrados por fornecedor."""
     try:
         agora = time.monotonic()
@@ -461,6 +485,8 @@ def buscar_produtos(fornecedor=None):
                 _PRODUTOS_CACHE['expira_em'] = agora + cache_segundos
         if fornecedor:
             produtos = [p for p in produtos if fornecedor_permitido(p['fornecedor'], fornecedor)]
+        if deduplicar:
+            produtos = _deduplicar_produtos(produtos)
         return produtos
     except Exception as e:
         logger.exception("Erro ao buscar produtos")

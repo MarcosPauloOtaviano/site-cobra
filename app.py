@@ -595,7 +595,9 @@ def aplicar_headers_basicos(response):
         and request.method == 'GET'
         and not request.cookies.get(app.config.get('SESSION_COOKIE_NAME', 'session'))
     ):
-        response.headers.setdefault('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600')
+        response.headers['Cache-Control'] = 'no-cache, max-age=0, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
     elif request.path.startswith('/admin') or request.path in ('/login', '/meus-pontos'):
         response.headers.setdefault('Cache-Control', 'no-store')
         response.headers.setdefault('X-Robots-Tag', 'noindex, nofollow')
@@ -649,7 +651,7 @@ def _carregar_imagem_planilha(image_id):
 
 @app.route('/')
 def home():
-    produtos   = buscar_produtos()
+    produtos   = buscar_produtos(deduplicar=True)
     categorias = sorted({p['categoria'] for p in produtos if p['categoria']}, key=str.lower)
     return render_template('index.html', produtos=produtos, categorias=categorias)
 
