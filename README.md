@@ -59,6 +59,6 @@ O clube de pontos usa telefone/WhatsApp como identificador, sem exigir CPF. A fi
 
 Quer criar um site para o seu negocio?
 
-- WhatsApp: 35 99834-0719
+- WhatsApp: 35 98844-0656
 - Instagram: @marquinhota
 - Email: markinhosp45@gmail.com
