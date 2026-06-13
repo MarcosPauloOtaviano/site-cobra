@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 {% set hero_products = produtos[:4] %}
+{% set lovers_products = produtos[:8] %}
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Os Cobra da Bola | Vitrine Premium</title>
+  <title>Cobra Lovers Edition | Os Cobra da Bola</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://csjdukuowprhmonyurge.supabase.co" crossorigin />
@@ -53,7 +54,7 @@
     .btn-confirm { background: #fff; color: #000; }
   </style>
 </head>
-<body class="lookbook-page">
+<body class="lookbook-page lovers-campaign">
   <div class="toast-stack" id="toastWrap" aria-live="polite"></div>
 
   <button type="button" class="cart-overlay" id="cartOverlay" aria-label="Fechar sacola"></button>
@@ -147,28 +148,35 @@
 
   <div class="brand-strip" aria-label="Letreiro de destaques da loja">
     <div class="brand-strip-track">
-      <span>Veste quem tem a senha</span>
-      <span>Pronta entrega selecionada</span>
-      <span>Compra pelo WhatsApp</span>
-      <span>1 ponto a cada R$ 4,45</span>
-      <span>500 pontos viram desconto</span>
-      <span>Novidades toda semana</span>
-      <span>Veste quem tem a senha</span>
-      <span>Pronta entrega selecionada</span>
-      <span>Compra pelo WhatsApp</span>
-      <span>1 ponto a cada R$ 4,45</span>
-      <span>500 pontos viram desconto</span>
-      <span>Novidades toda semana</span>
+      <span>Dia dos Namorados</span>
+      <span>Até 25% OFF</span>
+      <span>Modelo feminino + modelo masculino</span>
+      <span>Presenteie com estilo</span>
+      <span>Cobra Lovers Edition</span>
+      <span>Oferta por tempo limitado</span>
+      <span>Dia dos Namorados</span>
+      <span>Até 25% OFF</span>
+      <span>Modelo feminino + modelo masculino</span>
+      <span>Presenteie com estilo</span>
+      <span>Cobra Lovers Edition</span>
+      <span>Oferta por tempo limitado</span>
     </div>
   </div>
 
   <main>
-    <section class="hero-section hero-drop-carousel retail-hero" {% if hero_products %}data-hero-carousel{% endif %}>
+    <section class="hero-section hero-drop-carousel retail-hero lovers-hero" {% if hero_products %}data-hero-carousel{% endif %}>
       <div class="hero-copy">
-        <span class="eyebrow">Os Cobra da Bola / Performance Store</span>
-        <h1>Veste quem tem a senha</h1>
+        <span class="eyebrow">Campanha limitada / 12 de junho</span>
+        <div class="lovers-hero-badge">
+          <span>Promo Namorados</span>
+          <strong>Até 25% OFF</strong>
+        </div>
+        <h1>
+          <span>Cobra Lovers Edition</span>
+          <small>Dia dos Namorados</small>
+        </h1>
         <p>
-          Drop de jogo. Presença de rua. Peça esportiva com foto grande, pronta entrega selecionada e compra direta pelo WhatsApp.
+          Ela no estilo. Ele no jogo. Peças femininas e masculinas selecionadas para presentear com presença.
         </p>
         {% if hero_products %}
           <div class="hero-live-product retail-scoreboard" aria-live="polite">
@@ -181,9 +189,9 @@
         {% endif %}
         <div class="hero-actions">
           <button type="button" class="primary-link" data-hero-view-product {% if hero_products %}data-product-id="{{ hero_products[0].id }}"{% endif %}>
-            Ver no catálogo
+            Ver peça em destaque
           </button>
-          <button type="button" class="secondary-link" data-open-cart>Ver sacola</button>
+          <button type="button" class="secondary-link" data-open-cart>Abrir sacola</button>
         </div>
       </div>
 
@@ -257,12 +265,71 @@
       {% endif %}
     </section>
 
+    {% if lovers_products %}
+      <section class="lovers-runway" aria-label="Vitrine animada Cobra Lovers">
+        <div class="lovers-runway-heading">
+          <span>Veste quem tem a senha</span>
+          <strong>Modelos que combinam</strong>
+        </div>
+
+        <div class="lovers-runway-row" aria-hidden="true">
+          <div class="lovers-runway-track">
+            {% for repeat in range(2) %}
+              {% for p in lovers_products %}
+                {% if p.imagem %}
+                  <figure class="lovers-runway-item">
+                    <img src="{{ p.imagem }}" alt="" loading="lazy" decoding="async" width="240" height="290" />
+                    <figcaption>{{ p.nome }}</figcaption>
+                  </figure>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="lovers-runway-row lovers-runway-row--reverse" aria-hidden="true">
+          <div class="lovers-runway-track">
+            {% for repeat in range(2) %}
+              {% for p in lovers_products|reverse %}
+                {% if p.imagem %}
+                  <figure class="lovers-runway-item">
+                    <img src="{{ p.imagem }}" alt="" loading="lazy" decoding="async" width="240" height="290" />
+                    <figcaption>{{ p.categoria or 'Cobra Lovers' }}</figcaption>
+                  </figure>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="lovers-offer-band" aria-label="Destaques da promoção">
+      <div>
+        <span>Para ela</span>
+        <strong>Estilo que entra em campo</strong>
+      </div>
+      <div class="lovers-offer-band__main">
+        <span>Cobra Lovers Edition</span>
+        <strong>Até 25% OFF</strong>
+      </div>
+      <div>
+        <span>Para ele</span>
+        <strong>Presença dentro e fora do jogo</strong>
+      </div>
+    </section>
+
     <section class="collection-section retail-collection" id="vitrine">
       <div class="collection-heading">
         <div>
-          <span class="eyebrow">Catálogo Cobra</span>
-          <h2>Escolha a camisa</h2>
-          <p>{{ produtos|length }} produto{% if produtos|length != 1 %}s{% endif %} prontos para entrar no pedido.</p>
+          <span class="eyebrow">Ofertas de Dia dos Namorados</span>
+          <h2>Escolha o presente perfeito</h2>
+          <p>{{ produtos|length }} modelo{% if produtos|length != 1 %}s{% endif %} para montar um presente com identidade.</p>
+          <div class="lovers-category-tags" aria-label="Modelos da campanha">
+            <span>Modelo feminino</span>
+            <span>Modelo masculino</span>
+            <span>Até 25% OFF</span>
+          </div>
         </div>
         <div class="filter-bar" aria-label="Filtrar produtos por categoria">
           <button type="button" class="filter-chip is-active" data-filter="todos">Todos</button>
@@ -295,6 +362,7 @@
                 {% endif %}
 
                 <div class="product-badges">
+                  <span class="lovers-card-promo">Promo Namorados</span>
                   {% if p.disponibilidade == 'Pronta Entrega' %}
                     <span>Pronta entrega</span>
                   {% else %}
@@ -320,6 +388,12 @@
               </div>
 
               <div class="product-info">
+                {% if 'feminino' in (p.categoria or '')|lower %}
+                  <span class="lovers-model-label">Modelo Feminino</span>
+                {% else %}
+                  <span class="lovers-model-label">Modelo Masculino</span>
+                {% endif %}
+
                 <div class="product-topline">
                   <span>{{ p.categoria or 'Produto' }}</span>
                   {% if p.estoque > 0 %}

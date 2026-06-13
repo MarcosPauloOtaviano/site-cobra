@@ -609,7 +609,7 @@ def variaveis_globais():
     asset_version = os.getenv('ASSET_VERSION', 'attack15')
     return {
         'whatsapp_num': _whatsapp_numero_loja(),
-        'cache_bust': f'{asset_version}-cinema2',
+        'cache_bust': f'{asset_version}-lovers2026',
         'ambiente_vercel': AMBIENTE_VERCEL,
         'csrf_token': _csrf_token,
     }
