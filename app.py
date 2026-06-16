@@ -15,6 +15,7 @@ import time
 import json
 import base64
 import binascii
+import random
 from hmac import compare_digest
 from secrets import token_urlsafe
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -649,11 +650,51 @@ def _carregar_imagem_planilha(image_id):
     raise FileNotFoundError('Imagem não encontrada.')
 
 
+def _produtos_aleatorios_hero(produtos, limite=4):
+    def chave_produto(produto):
+        return str(produto.get('id') or produto.get('nome') or id(produto))
+
+    def tem_estoque(produto):
+        try:
+            return int(produto.get('estoque') or 0) > 0
+        except (TypeError, ValueError):
+            return False
+
+    candidatos = [
+        produto for produto in produtos
+        if produto.get('imagem') and tem_estoque(produto)
+    ]
+
+    if len(candidatos) < limite:
+        usados = {chave_produto(produto) for produto in candidatos}
+        candidatos.extend(
+            produto for produto in produtos
+            if produto.get('imagem') and chave_produto(produto) not in usados
+        )
+
+    if len(candidatos) < limite:
+        usados = {chave_produto(produto) for produto in candidatos}
+        candidatos.extend(
+            produto for produto in produtos
+            if chave_produto(produto) not in usados
+        )
+
+    if len(candidatos) <= limite:
+        return candidatos
+    return random.sample(candidatos, limite)
+
+
 @app.route('/')
 def home():
     produtos   = buscar_produtos(deduplicar=True)
+    hero_products = _produtos_aleatorios_hero(produtos)
     categorias = sorted({p['categoria'] for p in produtos if p['categoria']}, key=str.lower)
-    return render_template('index.html', produtos=produtos, categorias=categorias)
+    return render_template(
+        'index.html',
+        produtos=produtos,
+        categorias=categorias,
+        hero_products=hero_products,
+    )
 
 
 @app.route('/imagem/<image_id>')

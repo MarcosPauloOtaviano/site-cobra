@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-{% set hero_products = produtos[:4] %}
+{% set hero_products = hero_products|default(produtos[:4], true) %}
 {% set runway_products = produtos | selectattr('imagem') | selectattr('estoque', 'gt', 0) | list %}
 {% set runway_count = runway_products|length if runway_products|length > 12 else 12 %}
 <head>
