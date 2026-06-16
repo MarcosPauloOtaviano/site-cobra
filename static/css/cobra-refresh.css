@@ -6377,13 +6377,13 @@ body.lookbook-page {
   padding-inline: .45rem;
   transform: translate3d(0, 0, 0);
   will-change: transform;
-  animation: premiumRunwayLeft 38s linear infinite !important;
+  animation: premiumRunwayLeft var(--runway-duration, 38s) linear infinite !important;
   animation-play-state: running !important;
 }
 
 .premium-runway .premium-runway-row--reverse .premium-runway-track {
   animation-name: premiumRunwayRight;
-  animation-duration: 44s !important;
+  animation-duration: var(--runway-duration-reverse, 44s) !important;
   animation-delay: -12s;
 }
 
@@ -6502,11 +6502,11 @@ body.lookbook-page {
   }
 
   .premium-runway .premium-runway-track {
-    animation-duration: 44s !important;
+    animation-duration: var(--runway-duration, 44s) !important;
   }
 
   .premium-runway .premium-runway-row--reverse .premium-runway-track {
-    animation-duration: 50s !important;
+    animation-duration: var(--runway-duration-reverse, 50s) !important;
   }
 
   .premium-runway .premium-runway-item {
@@ -6517,12 +6517,12 @@ body.lookbook-page {
 
 @media (prefers-reduced-motion: reduce) {
   .lookbook-page .premium-runway .premium-runway-track {
-    animation: premiumRunwayLeft 38s linear infinite !important;
+    animation: premiumRunwayLeft var(--runway-duration, 38s) linear infinite !important;
     animation-play-state: running !important;
   }
 
   .lookbook-page .premium-runway .premium-runway-row--reverse .premium-runway-track {
-    animation: premiumRunwayRight 44s linear infinite !important;
+    animation: premiumRunwayRight var(--runway-duration-reverse, 44s) linear infinite !important;
     animation-delay: -12s !important;
     animation-play-state: running !important;
   }

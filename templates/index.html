@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 {% set hero_products = produtos[:4] %}
-{% set runway_products = produtos[:12] %}
+{% set runway_products = produtos | selectattr('imagem') | selectattr('estoque', 'gt', 0) | list %}
+{% set runway_count = runway_products|length if runway_products|length > 12 else 12 %}
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -259,7 +260,11 @@
     </section>
 
     {% if runway_products %}
-      <section class="premium-runway" aria-label="Vitrine premium animada">
+      <section
+        class="premium-runway"
+        aria-label="Vitrine premium animada"
+        style="--runway-duration: {{ '%.0f'|format(runway_count * 3.2) }}s; --runway-duration-reverse: {{ '%.0f'|format(runway_count * 3.7) }}s;"
+      >
         <div class="premium-runway-heading">
           <span>Veste quem tem a senha</span>
           <strong>Vitrine premium</strong>
@@ -269,12 +274,10 @@
           <div class="premium-runway-track">
             {% for repeat in range(2) %}
               {% for p in runway_products %}
-                {% if p.imagem %}
-                  <figure class="premium-runway-item">
-                    <img src="{{ p.imagem }}" alt="" loading="lazy" decoding="async" width="240" height="290" />
-                    <figcaption>{{ p.nome }}</figcaption>
-                  </figure>
-                {% endif %}
+                <figure class="premium-runway-item">
+                  <img src="{{ p.imagem }}" alt="" loading="lazy" decoding="async" width="240" height="290" />
+                  <figcaption>{{ p.nome }}</figcaption>
+                </figure>
               {% endfor %}
             {% endfor %}
           </div>
@@ -284,12 +287,10 @@
           <div class="premium-runway-track">
             {% for repeat in range(2) %}
               {% for p in runway_products|reverse %}
-                {% if p.imagem %}
-                  <figure class="premium-runway-item">
-                    <img src="{{ p.imagem }}" alt="" loading="lazy" decoding="async" width="240" height="290" />
-                    <figcaption>{{ p.categoria or 'Vitrine premium' }}</figcaption>
-                  </figure>
-                {% endif %}
+                <figure class="premium-runway-item">
+                  <img src="{{ p.imagem }}" alt="" loading="lazy" decoding="async" width="240" height="290" />
+                  <figcaption>{{ p.categoria or 'Vitrine premium' }}</figcaption>
+                </figure>
               {% endfor %}
             {% endfor %}
           </div>
