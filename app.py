@@ -46,6 +46,7 @@ from database import (
     mensagem_erro_planilha,
     obter_credenciais_google,
 )
+from integration_urls import validated_https_url
 
 # ─────────────────────────────────────────────────────────────────
 #  CONFIGURAÇÃO DA APLICAÇÃO
@@ -694,6 +695,7 @@ def home():
         produtos=produtos,
         categorias=categorias,
         hero_products=hero_products,
+        escolinha_url=validated_https_url(os.getenv('ESCOLINHA_URL')),
     )
 
 
